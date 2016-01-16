@@ -1,0 +1,145 @@
+<?xml version="1.0" encoding="utf-8"?>
+<feed xmlns="http://www.w3.org/2005/Atom">
+
+  <title><![CDATA[Category: Blaze, | firfiBlog]]></title>
+  <link href="http://loskutoff.com/blog/categories/blaze/atom.xml" rel="self"/>
+  <link href="http://loskutoff.com/"/>
+  <updated>2016-01-16T11:05:55+03:00</updated>
+  <id>http://loskutoff.com/</id>
+  <author>
+    <name><![CDATA[Igor Loskutoff]]></name>
+    <email><![CDATA[igor.loskutoff@gmail.com]]></email>
+  </author>
+  <generator uri="http://octopress.org/">Octopress</generator>
+
+  
+  <entry>
+    <title type="html"><![CDATA[Isolated Blaze Components in MeteorJS Application]]></title>
+    <link href="http://loskutoff.com/blog/isolated-blaze-components-in-meteorjs-application/"/>
+    <updated>2015-03-29T11:28:51+03:00</updated>
+    <id>http://loskutoff.com/blog/isolated-blaze-components-in-meteorjs-application</id>
+    <content type="html"><![CDATA[<p>This article is an attempt to describe non-common in Meteor community approach of handling Blaze templates as isolated components.
+There’s great blank space on this topic I found trying to implement it so code below would be result of my experiments and observations.
+I use this approach in my current project.</p>
+
+<p><em>Update 31 Marth</em> @Ben’s Comment to this article proposed a nice @meteorhacks library <a href="https://github.com/meteorhacks/flow-components">Flow-components</a>
+that does thing by same principles I described here. </p>
+
+<!--more-->
+
+<hr />
+
+<p>I implemented my last project with <a href="https://www.meteor.com/">MeteorJS</a> framework.
+Though it gives nice development speed, it also have many architectural drawbacks.
+I wasn’t particularly happy with <a href="https://www.meteor.com/blaze">Blaze</a> template engine.
+As I come from Angular world, I got used to wrap parts of my application frontend in isolated modules, bunch of code,
+including js, html and (!) css.
+Structure is something like described in <a href="https://github.com/johnpapa/angular-styleguide#style-y152">Johnpapa’s Angular Styleguide</a>.
+In Angular, I used directives for that so I can just drop some directive in any place of application, honouring it’s inner API that expressed through directive parameters.
+Trying to write something like that for Blaze I found it rather cumbersome, as I want from component next functionality:</p>
+
+<ul>
+  <li>1) Parameters with dual binding that are passed explicitly</li>
+  <li>2) Event system that gives possibility pop up events from components</li>
+</ul>
+
+<p>I was able to resolve 1) and 2) like this:</p>
+
+<ul>
+  <li>For 1), parameters with dual binding, I was just passing <a href="https://atmospherejs.com/meteor/reactive-var">ReactiveVars</a> links into component like this:</li>
+  <li>For 2), I used EventEmitter. Option is to just use callbacks.</li>
+</ul>
+
+<div><div class="CodeRay">
+  <div class="code"><pre><span style="color:#777">// client/myTemplate.js</span>
+<span style="background-color:hsla(0,100%,50%,0.05)"><span style="color:#710">'</span><span style="color:#D20">use strict</span><span style="color:#710">'</span></span>;
+
+<span style="color:#080;font-weight:bold">var</span> templateClass = Template.myTemplate;
+
+templateClass.onCreated(<span style="color:#080;font-weight:bold">function</span>() {
+    <span style="color:#777">// set initial state</span>
+    <span style="color:#080;font-weight:bold">var</span> template = <span style="color:#950">this</span>;
+    template.data = template.data || {}; <span style="color:#777">// sic! *1</span>
+    template.state = {
+        <span style="color:#606">myDualBindingVar</span>: <span style="color:#080;font-weight:bold">new</span> ReactiveVar(<span style="background-color:hsla(0,100%,50%,0.05)"><span style="color:#710">'</span><span style="color:#D20">default</span><span style="color:#710">'</span></span>), <span style="color:#777">// sic! *2</span>
+        <span style="color:#606">myEventEmitter</span>: <span style="color:#080;font-weight:bold">new</span> EventEmitter(),
+        <span style="color:#606">parentEmitter</span>: template.data.eventEmitter <span style="color:#777">// now I can get parent events</span>
+    };
+});
+
+templateClass.helpers({
+    <span style="color:#06B;font-weight:bold">myDualBindingVar</span>: <span style="color:#080;font-weight:bold">function</span>() { <span style="color:#777">// if I want dual binding</span>
+        <span style="color:#080;font-weight:bold">return</span> Template.instance().state.myDualBindingVar; <span style="color:#777">// sic! *3</span>
+    },
+    <span style="color:#06B;font-weight:bold">myDualBinding</span>: <span style="color:#080;font-weight:bold">function</span>() { <span style="color:#777">// if I want to just pass this variable in component on initialisation or if I want to draw in in Blaze template of current component</span>
+        <span style="color:#080;font-weight:bold">return</span> Template.instance().state.myDualBindingVar.get();
+    },
+    <span style="color:#06B;font-weight:bold">eventEmitter</span>: <span style="color:#080;font-weight:bold">function</span>() {
+        <span style="color:#080;font-weight:bold">return</span> Template.instance().state.myEventEmitter;
+    }
+});
+</pre></div>
+</div>
+</div>
+
+<div><div class="CodeRay">
+  <div class="code"><pre><span style="color:#777">&lt;!-- client/myTemplate.html --&gt;</span>
+<span style="color:#070;font-weight:bold">&lt;template</span> <span style="color:#b48">name</span>=<span style="background-color:hsla(0,100%,50%,0.05)"><span style="color:#710">&quot;</span><span style="color:#D20">myTemplate</span><span style="color:#710">&quot;</span></span><span style="color:#070;font-weight:bold">&gt;</span>
+    <span style="color:#070;font-weight:bold">&lt;div</span> <span style="color:#b48">class</span>=<span style="background-color:hsla(0,100%,50%,0.05)"><span style="color:#710">&quot;</span><span style="color:#D20">my-template</span><span style="color:#710">&quot;</span></span><span style="color:#070;font-weight:bold">&gt;</span> <span style="color:#777">&lt;!-- root element with class corresponding to component name --&gt;</span>
+        
+    <span style="color:#070;font-weight:bold">&lt;/div&gt;</span>
+<span style="color:#070;font-weight:bold">&lt;/template&gt;</span>
+</pre></div>
+</div>
+</div>
+
+<div><div class="CodeRay">
+  <div class="code"><pre><span style="color:#777">// client/mySecondTemplate.js</span>
+<span style="background-color:hsla(0,100%,50%,0.05)"><span style="color:#710">'</span><span style="color:#D20">use strict</span><span style="color:#710">'</span></span>;
+
+<span style="color:#080;font-weight:bold">var</span> templateClass = Template.mySecondTemplate;
+
+mySecondTemplate.onCreated(<span style="color:#080;font-weight:bold">function</span>() {
+    <span style="color:#777">// set initial state</span>
+    <span style="color:#080;font-weight:bold">var</span> template = <span style="color:#950">this</span>;
+    template.data = template.data || {};
+    template.state = {
+        <span style="color:#606">myDualBindingVar</span>: template.data.myDualBindingVar,
+        <span style="color:#606">parentEmitter</span>: template.data.eventEmitter
+    };
+    template.autorun(<span style="color:#080;font-weight:bold">function</span>() {
+        <span style="color:#080;font-weight:bold">var</span> myDualBinding = template.state.myDualBindingVar.get();
+        <span style="color:#777">// do stuff with parent var usage</span>
+    });
+});
+
+mySecondTemplate.events({
+    <span style="color:#606"><span style="color:#404">'</span><span>click .someButton</span><span style="color:#404">'</span></span>: <span style="color:#080;font-weight:bold">function</span>() {
+        <span style="color:#080;font-weight:bold">var</span> emitter = Template.instance().state.parentEmitter;
+        emitter.emit(<span style="background-color:hsla(0,100%,50%,0.05)"><span style="color:#710">'</span><span style="color:#D20">someButtonClicked</span><span style="color:#710">'</span></span>);
+    }
+});
+
+</pre></div>
+</div>
+</div>
+
+<p>Here I’ll explain decisions that I made in code above.</p>
+
+<p>*1: I write <code><span class="CodeRay">template.data = template.data || {};</span></code> in each component, as current Blaze approach is just left it undefined if there’s no parameters given.
+I’m sure they have the reasons doing this. But these reasons make me do additional ‘if/else’-like check like that.</p>
+
+<p>*2: <code>ReactiveVar</code> is a package that you have to install additionally. Most of tutorials I found use just Session API. Though it would work, I strongly disapprove this approach as we’re going back to 90’th global state with that.
+Additionally, it you have several components on page, i.e. login widget on page itself and login widget in popup, using Session will be a problem as it will cause names clash issue.</p>
+
+<p>*3: To get current template instance that we set up in onCreate I use Template.instance() call. That’s right, it’s call on singleton that returns you current template instance. I didn’t found any better way doing this.
+Also, getting current template instance doesn’t seems very popular thing too (because meteor people store everything in Session I presume) so before I started investigating this issue there wasn’t real good answer ‘how to get current template instance’ on StackOverflow (It was documented officially though).</p>
+
+<hr />
+
+<p>In next article that about to be written I’ll describe another solutions for component-like frontend architecture, including Angular and ReactJS.
+Also, as I started to use ReactJS instead of pure Blaze lately, I want to describe how to set up and use it, as there seems to not enough information in community how to do it.</p>
+]]></content>
+  </entry>
+  
+</feed>

@@ -1,0 +1,641 @@
+<?xml version="1.0" encoding="utf-8"?>
+<feed xmlns="http://www.w3.org/2005/Atom">
+
+  <title><![CDATA[firfiBlog]]></title>
+  <link href="http://loskutoff.com/atom.xml" rel="self"/>
+  <link href="http://loskutoff.com/"/>
+  <updated>2016-01-16T11:05:55+03:00</updated>
+  <id>http://loskutoff.com/</id>
+  <author>
+    <name><![CDATA[Igor Loskutoff]]></name>
+    <email><![CDATA[igor.loskutoff@gmail.com]]></email>
+  </author>
+  <generator uri="http://octopress.org/">Octopress</generator>
+
+  
+  <entry>
+    <title type="html"><![CDATA[Making browserify.js Working With Meteor Application]]></title>
+    <link href="http://loskutoff.com/blog/making-browserify-dot-js-working-with-meteor-application/"/>
+    <updated>2015-06-16T17:33:52+03:00</updated>
+    <id>http://loskutoff.com/blog/making-browserify-dot-js-working-with-meteor-application</id>
+    <content type="html"><![CDATA[<p>In previous <a href="http://www.loskutoff.com/blog/using-reactjs-as-a-meteorjs-views/">post</a>
+I described how to wrap existing npm (especially React-related) packages into Meteor packages to use them in your application.</p>
+
+<p>This way was quite hacky and was involving manual build modification, as well as forking existing libraries and committing build distributions in those forks.</p>
+
+<p>I choose this way as there wasn’t a way to <a href="http://browserify.org/">browserify</a> packages on meteor application build step.</p>
+
+<p>That really delighted me when I found that Eli Doran (https://github.com/elidoran) recently wrote custom <a href="https://github.com/elidoran/cosmos-browserify">build plugin</a>
+that finally enable us to include browserifyed React packages without writing those terrible wrappers!</p>
+
+<p>From now I deprecate my libraries that I ported for <a href="https://atmospherejs.com/">Atmosphere</a> package manager and recommend to those who still use wrapped packages move to Browserify with cosmos-browserify library help.</p>
+
+<p>Below I’ll describe how I moved my project from wrapped atmosphere packages to browserifyed components with <a href="https://github.com/elidoran/cosmos-browserify">cosmos-browserify</a>.</p>
+
+<!--more-->
+
+<h2 id="migrating-to-right-way-of-libraries-usage">Migrating to ‘right way’ of libraries usage</h2>
+
+<p>Let’s presume we have <code>firfi:meteor-react-bootstrap</code> package installed. It exports <code>ReactBootstrap</code> global for us.</p>
+
+<p>Only one line of code that makes that possible is <code>firfi:meteor-react-bootstrap</code> in .meteor/packages. It was added either manuall or with <code>meteor add firfi:meteor-react-bootstrap</code> command.</p>
+
+<p>Now, let’s remove it and substitute with browserifyed version.</p>
+
+<h3 id="adding-browserifyed-library-to-our-meteor-application">Adding browserifyed library to our Meteor application</h3>
+
+<p>I’ll go with local package way. This way, all browserifyed libraries will be available in all parts of your code as local packages being loaded before all other app code.</p>
+
+<p>First let’s create a package in folder packages. Let’s call it <code>client-deps</code>, so final created path would be <code>packages/client-deps</code>.</p>
+
+<p>To make Meteor identify it as a package, we should add file package.js there:</p>
+
+<div><div class="CodeRay">
+  <div class="code"><pre><span style="color:#777">// packages/client-deps/package.js</span>
+
+Package.describe({
+  <span style="color:#606">name</span>: <span style="background-color:hsla(0,100%,50%,0.05)"><span style="color:#710">'</span><span style="color:#D20">client-deps</span><span style="color:#710">'</span></span>
+});
+
+Npm.depends({
+  <span style="color:#606"><span style="color:#404">'</span><span>react-bootstrap</span><span style="color:#404">'</span></span>: <span style="background-color:hsla(0,100%,50%,0.05)"><span style="color:#710">'</span><span style="color:#D20">0.23.3</span><span style="color:#710">'</span></span>, <span style="color:#777">// this library will be browserifyed later</span>
+  <span style="color:#606">react</span> : <span style="background-color:hsla(0,100%,50%,0.05)"><span style="color:#710">'</span><span style="color:#D20">0.13.3</span><span style="color:#710">'</span></span> <span style="color:#777">// we'll also add react itself so react-bootstrap doesn't feel loneliness</span>
+});
+
+Package.onUse(<span style="color:#080;font-weight:bold">function</span>(api) {
+  api.use([<span style="background-color:hsla(0,100%,50%,0.05)"><span style="color:#710">'</span><span style="color:#D20">cosmos:browserify@0.3.0</span><span style="color:#710">'</span></span>]); <span style="color:#777">// insert the latest version here</span>
+  api.addFiles([<span style="background-color:hsla(0,100%,50%,0.05)"><span style="color:#710">'</span><span style="color:#D20">app.browserify.js</span><span style="color:#710">'</span></span>]); <span style="color:#777">// we'll create this file below</span>
+  api.<span style="color:#080;font-weight:bold">export</span>([<span style="background-color:hsla(0,100%,50%,0.05)"><span style="color:#710">'</span><span style="color:#D20">ReactBootstrap</span><span style="color:#710">'</span></span>, <span style="background-color:hsla(0,100%,50%,0.05)"><span style="color:#710">'</span><span style="color:#D20">React</span><span style="color:#710">'</span></span>]); <span style="color:#777">// it's exported in app.browserify.js</span>
+});
+
+</pre></div>
+</div>
+</div>
+
+<p>To tell which libraries we’ll browserify we need a .browserify file which will be handled by cosmos-browserify build plugin.</p>
+
+<p>Cosmos-browserify will unwrap all require()’d libraries in browserify bundles.</p>
+
+<div><div class="CodeRay">
+  <div class="code"><pre><span style="color:#777">// packages/client-deps/app.browserify.js</span>
+React = require(<span style="background-color:hsla(0,100%,50%,0.05)"><span style="color:#710">'</span><span style="color:#D20">react/addons</span><span style="color:#710">'</span></span>);
+ReactBootstrap = require(<span style="background-color:hsla(0,100%,50%,0.05)"><span style="color:#710">'</span><span style="color:#D20">react-bootstrap</span><span style="color:#710">'</span></span>); <span style="color:#777">// export it 'globally' so Meteor is happy and can `api.export` it in package.js</span>
+</pre></div>
+</div>
+</div>
+
+<p>And, to make it all work, you should finally install cosmos-browserify itself: <code>meteor add cosmos:browserify</code>
+and point your meteor app that it should use your local package: <code>meteor add client-deps</code></p>
+
+<p>Don’t forget to delete old libraries that were exporting your <code>ReactBootstrap</code> and <code>React</code>. In my case it was
+<code>firfi:meteor-react-bootstrap</code> (that was depending on old version of https://github.com/grovelabs/meteor-react with React exported).</p>
+
+<p>If after this you still get some react warnings it is quite possible you still have some libraries that exporting or using internally it’s own React versions. In that case just browserify it too,
+as I had to do with <code>reactjs:react</code>, <code>firfi:griddle-react</code>, <code>dgellow:react-loader</code> and <code>firfi:tcomb-form</code>.</p>
+
+<p>With definitely more boilerplate you get latest versions of all npm libraries existing without third-party wrappers and also have it included ‘right way’. Happy meteor coding!</p>
+]]></content>
+  </entry>
+  
+  <entry>
+    <title type="html"><![CDATA[Using ReactJS as a MeteorJS View Layer]]></title>
+    <link href="http://loskutoff.com/blog/using-reactjs-as-a-meteorjs-views/"/>
+    <updated>2015-04-17T15:55:17+03:00</updated>
+    <id>http://loskutoff.com/blog/using-reactjs-as-a-meteorjs-views</id>
+    <content type="html"><![CDATA[<p>Here I’ll share actual on this day way to use ReactJS with Meteor. The basic setup itself rather simple,
+so after shortly describing it, I’ll touch a matters of using third-party React packages.</p>
+
+<!--more-->
+
+<h2 id="using-react-components-in-meteor-applications">Using React components in Meteor applications</h2>
+
+<p>To basic setup React and jsx transformation pipeline it is enough to install this package https://github.com/reactjs/react-meteor</p>
+
+<p>Also, it offers you a special mixin for tying together Meteor reactive sources and your component state, but I found it problematical to use in current state
+(i.e. your getMeteorState function will be executed everytime your main state is changed with setState).</p>
+
+<p>It can sometimes be annoying, but in general, if you don’t mind it, you can use it as well.</p>
+
+<p>Another option can be using subscriptions on componentWillMount and unsubscribe it in componentWillUnmount like this:</p>
+
+<div><div class="CodeRay">
+  <div class="code"><pre>
+<span style="color:#06B;font-weight:bold">componentWillMount</span>: <span style="color:#080;font-weight:bold">function</span>() {
+    <span style="color:#950">this</span>._cancelSubscription = Tracker.autorun(...);
+}
+
+<span style="color:#06B;font-weight:bold">componentWillUnmount</span>: <span style="color:#080;font-weight:bold">function</span>() {
+    <span style="color:#950">this</span>._cancelSubscription();
+}
+
+</pre></div>
+</div>
+</div>
+
+<p>Sometimes I find Tracker.autorun not enough, and currently use some service for data fetching, abstracting it and exposing reactive stream
+backed up by BaconJS library (it could be rxJS as well). It looks almost the same as in example above; you get subscription in componentWillMount
+and unsubscribe in componentWillUnmount.</p>
+
+<p>Another possible solution is using any Flux flavours, and listen to Storages.</p>
+
+<p>One another problem I faced with is using React in current project that written with Blaze already with some of Meteor routing libraries (I use iron router)
+React components doesn’t know anything about your route change or Blaze template destruction and stays on your screen.</p>
+
+<p>To address this issue, I wrap components in Blaze templates, hooking template create/destroy livecycle callbacks:</p>
+
+<div><div class="CodeRay">
+  <div class="code"><pre><span style="color:#777">// some code omitted, I left only relevant to issue one</span>
+_ReactUtils.<span style="color:#06B;font-weight:bold">createClass</span> = <span style="color:#080;font-weight:bold">function</span>(opts) {
+  <span style="color:#080;font-weight:bold">var</span> templateName = opts.templateName;
+  <span style="color:#080;font-weight:bold">var</span> templateClass = <span style="color:#080;font-weight:bold">new</span> Template(
+    templateName,
+    <span style="color:#080;font-weight:bold">function</span>() {
+      <span style="color:#080;font-weight:bold">return</span> <span style="color:#080;font-weight:bold">new</span> HTML.DIV;
+    }
+  );
+  Template[templateName] = templateClass;
+  <span style="color:#080;font-weight:bold">var</span> Component = React.createClass(opts);
+  templateClass.onRendered(<span style="color:#080;font-weight:bold">function</span>() {
+    <span style="color:#080;font-weight:bold">var</span> template = <span style="color:#950">this</span>;
+    <span style="color:#080;font-weight:bold">var</span> data = <span style="color:#950">this</span>.data || {};
+    <span style="color:#080;font-weight:bold">var</span> c = React.createElement(Component, data);
+    c._meteorTemplate = template;
+    template._reactComponent = React.render(c, template.firstNode);
+  });
+  templateClass.onDestroyed(<span style="color:#080;font-weight:bold">function</span>() {
+    <span style="color:#080;font-weight:bold">var</span> template = <span style="color:#950">this</span>;
+    React.unmountComponentAtNode(template._reactComponent.getDOMNode());
+  });
+  <span style="color:#080;font-weight:bold">return</span> Component;
+};
+</pre></div>
+</div>
+</div>
+
+<p>With this approach, I can just replace my Blaze components one by one, i.e.</p>
+
+<div><div class="CodeRay">
+  <div class="code"><pre><span style="color:#070;font-weight:bold">&lt;template</span> <span style="color:#b48">name</span>=<span style="background-color:hsla(0,100%,50%,0.05)"><span style="color:#710">&quot;</span><span style="color:#D20">indexPage</span><span style="color:#710">&quot;</span></span><span style="color:#070;font-weight:bold">&gt;</span>
+    
+    
+<span style="color:#070;font-weight:bold">&lt;/template&gt;</span>
+</pre></div>
+</div>
+</div>
+
+<p>And when I’m ready to switch another component to React,</p>
+
+<div><div class="CodeRay">
+  <div class="code"><pre><span style="color:#070;font-weight:bold">&lt;template</span> <span style="color:#b48">name</span>=<span style="background-color:hsla(0,100%,50%,0.05)"><span style="color:#710">&quot;</span><span style="color:#D20">indexPage</span><span style="color:#710">&quot;</span></span><span style="color:#070;font-weight:bold">&gt;</span>
+    
+    
+<span style="color:#070;font-weight:bold">&lt;/template&gt;</span>
+</pre></div>
+</div>
+</div>
+
+<p>If you start a new project, you can use some of React routers I suppose. I didn’t investigated this matter yet.</p>
+
+<h2 id="using-third-party-react-packages-in-meteor">Using third-party React packages in Meteor</h2>
+
+<p>Huge problem I faced with was lack of pre-build step in packages as well as impossibility to use browserify on client-side.</p>
+
+<p>Many React libraries use require() and doesn’t have build distributive available in repository, so if there’s no such Meteor package you have to build it yourself.</p>
+
+<p>What I do usually is use webpack, excluding React from build (as we’ll depend on react-meteor package in our package-wrapper).</p>
+
+<div><div class="CodeRay">
+  <div class="code"><pre>module.exports = {
+    <span style="color:#606">entry</span>: <span style="background-color:hsla(0,100%,50%,0.05)"><span style="color:#710">&quot;</span><span style="color:#D20">./index.js</span><span style="color:#710">&quot;</span></span>,
+    <span style="color:#606">output</span>: {
+        <span style="color:#606">path</span>: __dirname,
+        <span style="color:#606">filename</span>: <span style="background-color:hsla(0,100%,50%,0.05)"><span style="color:#710">&quot;</span><span style="color:#D20">dist/meteor-dist.js</span><span style="color:#710">&quot;</span></span>,
+        <span style="color:#606">libraryTarget</span>: <span style="background-color:hsla(0,100%,50%,0.05)"><span style="color:#710">&quot;</span><span style="color:#D20">umd</span><span style="color:#710">&quot;</span></span>,
+        <span style="color:#606">library</span>: <span style="background-color:hsla(0,100%,50%,0.05)"><span style="color:#710">&quot;</span><span style="color:#D20">MyLibrary</span><span style="color:#710">&quot;</span></span>
+    },
+    <span style="color:#606">externals</span>: {
+        <span style="color:#606">react</span>: <span style="background-color:hsla(0,100%,50%,0.05)"><span style="color:#710">'</span><span style="color:#D20">React</span><span style="color:#710">'</span></span>
+    }
+};
+</pre></div>
+</div>
+</div>
+
+<p>Here, ‘react’ library would be excluded and will be referenced as a React on global object that we have already,
+and library itself will be exported as MyLibrary.</p>
+
+<p>Then you can run webpack and it’ll create distributive that can be used in Meteor package description:</p>
+
+<div><div class="CodeRay">
+  <div class="code"><pre>Package.onUse(<span style="color:#080;font-weight:bold">function</span>(api) {
+  api.use(<span style="background-color:hsla(0,100%,50%,0.05)"><span style="color:#710">'</span><span style="color:#D20">reactjs:react@0.2.1</span><span style="color:#710">'</span></span>, [<span style="background-color:hsla(0,100%,50%,0.05)"><span style="color:#710">'</span><span style="color:#D20">client</span><span style="color:#710">'</span></span>, <span style="background-color:hsla(0,100%,50%,0.05)"><span style="color:#710">'</span><span style="color:#D20">server</span><span style="color:#710">'</span></span>]);
+  api.addFiles(<span style="background-color:hsla(0,100%,50%,0.05)"><span style="color:#710">'</span><span style="color:#D20">dist/meteor-dist.js</span><span style="color:#710">'</span></span>, [<span style="background-color:hsla(0,100%,50%,0.05)"><span style="color:#710">'</span><span style="color:#D20">client</span><span style="color:#710">'</span></span>, <span style="background-color:hsla(0,100%,50%,0.05)"><span style="color:#710">'</span><span style="color:#D20">server</span><span style="color:#710">'</span></span>]);
+  api.<span style="color:#080;font-weight:bold">export</span>(<span style="background-color:hsla(0,100%,50%,0.05)"><span style="color:#710">'</span><span style="color:#D20">MyLibrary</span><span style="color:#710">'</span></span>, [<span style="background-color:hsla(0,100%,50%,0.05)"><span style="color:#710">'</span><span style="color:#D20">client</span><span style="color:#710">'</span></span>, <span style="background-color:hsla(0,100%,50%,0.05)"><span style="color:#710">'</span><span style="color:#D20">server</span><span style="color:#710">'</span></span>]);
+});
+</pre></div>
+</div>
+</div>
+
+<p>However, that wouldn’t work. Reasons are described in my previous post, so there’s just a solution: in your dist, manually
+create an object with React from global scope, pass it into dist function, then extract MyLibrary from it back to the global scope.</p>
+
+<p>It’ll look like that:</p>
+
+<div><div class="CodeRay">
+  <div class="code"><pre><span style="color:#080;font-weight:bold">var</span> meteorHack = {
+  <span style="color:#606">React</span>: React
+};
+(<span style="color:#080;font-weight:bold">function</span> <span style="color:#06B;font-weight:bold">webpackUniversalModuleDefinition</span>(root, factory) {
+    ...
+})(meteorHack, ...) <span style="color:#777">// here, meteorHack instead of this</span>
+
+...
+
+MyLibrary = meteorHack.MyLibrary;
+
+</pre></div>
+</div>
+</div>
+
+<p>Pay attention that we pass <code>meteorHack</code> object instead of <code>this</code> as it wouldn’t work as expected with <code>this</code>.</p>
+
+<p>Now you can check the library locally with a symlink and publish to Meteor repository.</p>
+
+<p>My last recommendation here will be making it a fork of original library rather than creating own repository, this way you can
+pull updates and generally have things tracked better.</p>
+]]></content>
+  </entry>
+  
+  <entry>
+    <title type="html"><![CDATA[Born to Be Legacy, or MeteorJS: Fractal of Helloworld-oriented Design]]></title>
+    <link href="http://loskutoff.com/blog/meteorjs-born-to-be-legacy/"/>
+    <updated>2015-04-15T20:00:15+03:00</updated>
+    <id>http://loskutoff.com/blog/meteorjs-born-to-be-legacy</id>
+    <content type="html"><![CDATA[<p>Here I’ll share some thoughts about MeteorJS bad parts that I faced working with it.
+It isn’t about starting holy war, but rather constructive criticism, and I really hope I’ll help Meteor community become better.</p>
+
+<p>I really want to be wrong here. Please point in comments if I’m wrong, and return me my trust in framework and in community.</p>
+
+<p>So there’s my main statement: MeteorJS is optimized for Hello World applications;
+you can write serious application on top of it, but you have to hack it around to do so.</p>
+
+<!--more-->
+
+<p>MeteorJS advertises itself as easy to use. It does so many things for you. It attracts developers with shiny demonstrations,
+aggressively extending it’s community, writing nice tutorials for new developers which are easy to follow but which are utterly wrong.</p>
+
+<p>How many times did you saw tutorial with usage of a Session reactive source, for like <em>everything</em>?</p>
+
+<p>* <em>Session reactive source is a (string)key-value store that is maintained for the whole application
+and accessible globally from any code part</em></p>
+
+<p>Of course you can use namespaces in form of prefixes (but who <em>really</em> doing it?) or ReactiveVars like me.
+But I don’t see it’s usage as a recommended, as a result there’s plead of new developers who learning to do things wrong.</p>
+
+<p>Session is only a part of big <code>global</code> problem, that, in it’s turn, a part of packages / dependencies loading problem.
+I’ll write about it later, but will concentrate on problem of globals.</p>
+
+<p>So my second statement would be: Packages in Meteor are globals, and it is fundamentally wrong.
+If you think globals are OK I hope there’s time machine for you so you could travel back to nineties and never come back.</p>
+
+<p>I agree, globals are very easy to use and easy to attract fresh blood to community, but only if you don’t care about blood quality.</p>
+
+<p>What tangible problems globals give me right now are a) problem with load order and dependencies b) problem with packages.</p>
+
+<p>A. Load order issues</p>
+
+<p>So as we all know, Meteor load files deep-first, alphabetical-first, ‘main.js’-last.
+That becomes an issue when you have some inner dependencies to watch, i.e. you have services/SomeService/index.js and someFeature/index.js
+which depends in SomeService at initialisation. When you move someFeature/index.js to someFeature/subfolder/subfolder/index.js you don’t have a
+SomeService global initialized anymore.</p>
+
+<p>Some can argue about Meteor.loaded callback. That’s ok as long as service isn’t use this callback too.</p>
+
+<p>As a result, you don’t structure your application as you want, but rather as you can.</p>
+
+<p>That can be resolved with packages, but you don’t want to move all your application-specific functionality in packages just to get load order,
+besides, packaging system has it’s own problems.</p>
+
+<p>B. Globals and packages</p>
+
+<p>How packages are being imported into your applications is the globals too.
+Packages are supposed to have ‘export’ API that describes what globals would be imported in your app.</p>
+
+<p>Sounds great, but let’s look in details how it works.</p>
+
+<p>First, you create package: you get some library, bundle it in dist.js like this:</p>
+
+<div><div class="CodeRay">
+  <div class="code"><pre>MyPackage = {<span style="color:#777">/* your package API */</span>};
+</pre></div>
+</div>
+</div>
+
+<p>and then, in <code>package.js</code>, you write something like <code>api.export('MyPackage', ['client'])</code> so it is being exported to client side.</p>
+
+<p>So far so good, but wait a second, say you, what if I have a package that need to be built from modules with <a href="http://webpack.github.io/">webpack</a> or <a href="http://browserify.org/">browserify</a>?
+Unfortunately you can’t do it; you have to <strong>include built dist.js in your repository</strong>. For some it isn’t a problem; but I personally distaste it.
+So that doesn’t lead to bit problems. Ok, just include it. It is your package. Wait, what? It isn’t your package?
+And package owners distaste including dist in their package too? Then just fork it and build it yourself. That’s a good solution.
+Except it wouldn’t work.</p>
+
+<p>And there’s the reason - package managers like browserify and webpack packing built packages in <a href="http://en.wikipedia.org/wiki/Immediately-invoked_function_expression">IFFE</a>
+(Immediately invoked function expression). More simply put, it looks like this:</p>
+
+<div><div class="CodeRay">
+  <div class="code"><pre>(<span style="color:#080;font-weight:bold">function</span>(global){
+    <span style="color:#777">// assign stuff to 'global', works with AMD, Require, just window etc, but not with Meteor.</span>
+})(<span style="color:#950">this</span>);
+</pre></div>
+</div>
+</div>
+
+<p>Unfortunately, <code>MyPackage = {}</code> isn’t the same thing as <code>this.MyPackage = {}</code> in package file.
+In <code>this</code> case your <code>api.export</code> will export <code>undefined</code> instead of your package.
+And I have a hack for this. Just don’t export this variable in <code>api.use</code>, and you’ll be fine (no idea why it works).
+But seriously? That’s pretty crucial infrastructure functionality and you’re beyond 1.0 already.</p>
+
+<p>As a bonus, if you have another globals that you want to depend on in your package, you don’t have them in <code>this</code>. So you have to emulate <code>this</code> like</p>
+
+<div><div class="CodeRay">
+  <div class="code"><pre><span style="color:#080;font-weight:bold">var</span> meteorHack = {<span style="color:#606">packageIDependOn</span>: packageIDependOn};
+(<span style="color:#080;font-weight:bold">function</span>(global){
+    <span style="color:#777">// assign MyPackage to 'global', using packageIDependOn</span>
+})(meteorHack);
+MyPackage = meteorHack.MyPackage;
+</pre></div>
+</div>
+</div>
+
+<p>You can argue that it is automatic build and you don’t have to add some hacks manually. I don’t like it too, but it how does it works right now.</p>
+
+<p>Ok, we dealt with dist.js, included it with package.js in our fork and pull requested the library owner.</p>
+
+<p>Now library owner has to decide, whether accept it or not. So things that have to be accepted:</p>
+
+<ul>
+  <li>
+    <p>dist.js - that will increase repo size, will impose commit discipline (commit code first, then build) (or commit everything at once and have dirty commit history)</p>
+  </li>
+  <li>
+    <p>package.js. So some guy that doesn’t know Meteor have to accept
+ some file named <code>package.js</code> and another users of this package will see it every time they look at source directory tree
+ and wonder if it is some npm build custom script (what will be you first thought, implying you see already package.json?).
+ Really, really confusing.</p>
+  </li>
+  <li>
+    <p>mentioned above hack for dist.js</p>
+  </li>
+</ul>
+
+<p>Well, you always can maintain your own fork and share it with community under your name. But today you work with MeteorJS, and tomorrow
+you’re hired on CometJS or PonyJS or WhateverJS project and you have to maintain your Meteor legacy packages.
+Remembering to repackage them every time on new version and apply manual hacks to it.</p>
+
+<p>So to summarise written above:</p>
+
+<p>currently Meteor have oversimplified system on these levels:</p>
+
+<ul>
+  <li>
+    <p>application programming (globals everywhere, or Template.instance() to get the template current instance from helper)</p>
+  </li>
+  <li>
+    <p>package programming (globals again, and only <code>MyPackage = ...</code> working)</p>
+  </li>
+  <li>
+    <p>documentation level (documentation and articles enforcing idea that Meteor is simple and pleasant to work with, and enforcing using ‘easy’ solutions like globals and global Session store)</p>
+  </li>
+</ul>
+
+<p>This ‘simplicity’ gives you big problems when you want to do advanced things.</p>
+
+<p>So I call this design helloworld-oriented, fit very well to attract young developers and especially fit well to attract near-programming management/startup owners
+who already heard all this buzz about ten-million funding and about fullstack JS tendency.</p>
+
+<p>Thoughts?</p>
+]]></content>
+  </entry>
+  
+  <entry>
+    <title type="html"><![CDATA[Isolated Blaze Components in MeteorJS Application]]></title>
+    <link href="http://loskutoff.com/blog/isolated-blaze-components-in-meteorjs-application/"/>
+    <updated>2015-03-29T11:28:51+03:00</updated>
+    <id>http://loskutoff.com/blog/isolated-blaze-components-in-meteorjs-application</id>
+    <content type="html"><![CDATA[<p>This article is an attempt to describe non-common in Meteor community approach of handling Blaze templates as isolated components.
+There’s great blank space on this topic I found trying to implement it so code below would be result of my experiments and observations.
+I use this approach in my current project.</p>
+
+<p><em>Update 31 Marth</em> @Ben’s Comment to this article proposed a nice @meteorhacks library <a href="https://github.com/meteorhacks/flow-components">Flow-components</a>
+that does thing by same principles I described here. </p>
+
+<!--more-->
+
+<hr />
+
+<p>I implemented my last project with <a href="https://www.meteor.com/">MeteorJS</a> framework.
+Though it gives nice development speed, it also have many architectural drawbacks.
+I wasn’t particularly happy with <a href="https://www.meteor.com/blaze">Blaze</a> template engine.
+As I come from Angular world, I got used to wrap parts of my application frontend in isolated modules, bunch of code,
+including js, html and (!) css.
+Structure is something like described in <a href="https://github.com/johnpapa/angular-styleguide#style-y152">Johnpapa’s Angular Styleguide</a>.
+In Angular, I used directives for that so I can just drop some directive in any place of application, honouring it’s inner API that expressed through directive parameters.
+Trying to write something like that for Blaze I found it rather cumbersome, as I want from component next functionality:</p>
+
+<ul>
+  <li>1) Parameters with dual binding that are passed explicitly</li>
+  <li>2) Event system that gives possibility pop up events from components</li>
+</ul>
+
+<p>I was able to resolve 1) and 2) like this:</p>
+
+<ul>
+  <li>For 1), parameters with dual binding, I was just passing <a href="https://atmospherejs.com/meteor/reactive-var">ReactiveVars</a> links into component like this:</li>
+  <li>For 2), I used EventEmitter. Option is to just use callbacks.</li>
+</ul>
+
+<div><div class="CodeRay">
+  <div class="code"><pre><span style="color:#777">// client/myTemplate.js</span>
+<span style="background-color:hsla(0,100%,50%,0.05)"><span style="color:#710">'</span><span style="color:#D20">use strict</span><span style="color:#710">'</span></span>;
+
+<span style="color:#080;font-weight:bold">var</span> templateClass = Template.myTemplate;
+
+templateClass.onCreated(<span style="color:#080;font-weight:bold">function</span>() {
+    <span style="color:#777">// set initial state</span>
+    <span style="color:#080;font-weight:bold">var</span> template = <span style="color:#950">this</span>;
+    template.data = template.data || {}; <span style="color:#777">// sic! *1</span>
+    template.state = {
+        <span style="color:#606">myDualBindingVar</span>: <span style="color:#080;font-weight:bold">new</span> ReactiveVar(<span style="background-color:hsla(0,100%,50%,0.05)"><span style="color:#710">'</span><span style="color:#D20">default</span><span style="color:#710">'</span></span>), <span style="color:#777">// sic! *2</span>
+        <span style="color:#606">myEventEmitter</span>: <span style="color:#080;font-weight:bold">new</span> EventEmitter(),
+        <span style="color:#606">parentEmitter</span>: template.data.eventEmitter <span style="color:#777">// now I can get parent events</span>
+    };
+});
+
+templateClass.helpers({
+    <span style="color:#06B;font-weight:bold">myDualBindingVar</span>: <span style="color:#080;font-weight:bold">function</span>() { <span style="color:#777">// if I want dual binding</span>
+        <span style="color:#080;font-weight:bold">return</span> Template.instance().state.myDualBindingVar; <span style="color:#777">// sic! *3</span>
+    },
+    <span style="color:#06B;font-weight:bold">myDualBinding</span>: <span style="color:#080;font-weight:bold">function</span>() { <span style="color:#777">// if I want to just pass this variable in component on initialisation or if I want to draw in in Blaze template of current component</span>
+        <span style="color:#080;font-weight:bold">return</span> Template.instance().state.myDualBindingVar.get();
+    },
+    <span style="color:#06B;font-weight:bold">eventEmitter</span>: <span style="color:#080;font-weight:bold">function</span>() {
+        <span style="color:#080;font-weight:bold">return</span> Template.instance().state.myEventEmitter;
+    }
+});
+</pre></div>
+</div>
+</div>
+
+<div><div class="CodeRay">
+  <div class="code"><pre><span style="color:#777">&lt;!-- client/myTemplate.html --&gt;</span>
+<span style="color:#070;font-weight:bold">&lt;template</span> <span style="color:#b48">name</span>=<span style="background-color:hsla(0,100%,50%,0.05)"><span style="color:#710">&quot;</span><span style="color:#D20">myTemplate</span><span style="color:#710">&quot;</span></span><span style="color:#070;font-weight:bold">&gt;</span>
+    <span style="color:#070;font-weight:bold">&lt;div</span> <span style="color:#b48">class</span>=<span style="background-color:hsla(0,100%,50%,0.05)"><span style="color:#710">&quot;</span><span style="color:#D20">my-template</span><span style="color:#710">&quot;</span></span><span style="color:#070;font-weight:bold">&gt;</span> <span style="color:#777">&lt;!-- root element with class corresponding to component name --&gt;</span>
+        
+    <span style="color:#070;font-weight:bold">&lt;/div&gt;</span>
+<span style="color:#070;font-weight:bold">&lt;/template&gt;</span>
+</pre></div>
+</div>
+</div>
+
+<div><div class="CodeRay">
+  <div class="code"><pre><span style="color:#777">// client/mySecondTemplate.js</span>
+<span style="background-color:hsla(0,100%,50%,0.05)"><span style="color:#710">'</span><span style="color:#D20">use strict</span><span style="color:#710">'</span></span>;
+
+<span style="color:#080;font-weight:bold">var</span> templateClass = Template.mySecondTemplate;
+
+mySecondTemplate.onCreated(<span style="color:#080;font-weight:bold">function</span>() {
+    <span style="color:#777">// set initial state</span>
+    <span style="color:#080;font-weight:bold">var</span> template = <span style="color:#950">this</span>;
+    template.data = template.data || {};
+    template.state = {
+        <span style="color:#606">myDualBindingVar</span>: template.data.myDualBindingVar,
+        <span style="color:#606">parentEmitter</span>: template.data.eventEmitter
+    };
+    template.autorun(<span style="color:#080;font-weight:bold">function</span>() {
+        <span style="color:#080;font-weight:bold">var</span> myDualBinding = template.state.myDualBindingVar.get();
+        <span style="color:#777">// do stuff with parent var usage</span>
+    });
+});
+
+mySecondTemplate.events({
+    <span style="color:#606"><span style="color:#404">'</span><span>click .someButton</span><span style="color:#404">'</span></span>: <span style="color:#080;font-weight:bold">function</span>() {
+        <span style="color:#080;font-weight:bold">var</span> emitter = Template.instance().state.parentEmitter;
+        emitter.emit(<span style="background-color:hsla(0,100%,50%,0.05)"><span style="color:#710">'</span><span style="color:#D20">someButtonClicked</span><span style="color:#710">'</span></span>);
+    }
+});
+
+</pre></div>
+</div>
+</div>
+
+<p>Here I’ll explain decisions that I made in code above.</p>
+
+<p>*1: I write <code><span class="CodeRay">template.data = template.data || {};</span></code> in each component, as current Blaze approach is just left it undefined if there’s no parameters given.
+I’m sure they have the reasons doing this. But these reasons make me do additional ‘if/else’-like check like that.</p>
+
+<p>*2: <code>ReactiveVar</code> is a package that you have to install additionally. Most of tutorials I found use just Session API. Though it would work, I strongly disapprove this approach as we’re going back to 90’th global state with that.
+Additionally, it you have several components on page, i.e. login widget on page itself and login widget in popup, using Session will be a problem as it will cause names clash issue.</p>
+
+<p>*3: To get current template instance that we set up in onCreate I use Template.instance() call. That’s right, it’s call on singleton that returns you current template instance. I didn’t found any better way doing this.
+Also, getting current template instance doesn’t seems very popular thing too (because meteor people store everything in Session I presume) so before I started investigating this issue there wasn’t real good answer ‘how to get current template instance’ on StackOverflow (It was documented officially though).</p>
+
+<hr />
+
+<p>In next article that about to be written I’ll describe another solutions for component-like frontend architecture, including Angular and ReactJS.
+Also, as I started to use ReactJS instead of pure Blaze lately, I want to describe how to set up and use it, as there seems to not enough information in community how to do it.</p>
+]]></content>
+  </entry>
+  
+  <entry>
+    <title type="html"><![CDATA[Writing a Bot for Online Browser Game With PhantomJS]]></title>
+    <link href="http://loskutoff.com/blog/writing-a-bot-for-online-browser-game-with-phantomjs/"/>
+    <updated>2014-03-28T12:18:18+04:00</updated>
+    <id>http://loskutoff.com/blog/writing-a-bot-for-online-browser-game-with-phantomjs</id>
+    <content type="html"><![CDATA[<p>Phantomjs could be used for frontend functional testing.</p>
+
+<p>Sometimes it could be used for <a href="http://www.yearofmoo.com/2012/11/angularjs-and-seo.html">rich web application html snapshots for search engine crawlers</a></p>
+
+<p>Let’s use it for cheating.</p>
+
+<p>In this article I’ll describe creating process of very simple html+js online game bot that running headlessly 24/7 on remote server (I’ll use <a href="https://herokuapp.com/">Heroku</a>).</p>
+
+<!--more-->
+
+<p>I will assume that reader is familiar with <a href="http://phantomjs.org/download.html">phantomjs installation</a>. In this example I’ll use online <a href="http://ru.wikipedia.org/wiki/Zero_Player_Game">ZPG</a> <a href="http://godvillegame.com/">Godville</a>.</p>
+
+<h2 id="login-and-main-game-logic">Login and main game logic</h2>
+
+<p>There’s basically two lifecycle parts that need to be maintained: authentication and main lifecycle.</p>
+
+<p>First and most easy way to do authentication is just fill login/pass fields on each run. It is not the best way because game could use captcha after several requests (and Godville is using it) so let’s plug in cookies:</p>
+
+<p><code>phantomjs --cookies-file=cookies.txt bot.js</code></p>
+
+<p>Where bot.js is main script file. File cookies.txt will be created automatically and will remain in project folder after you stop application. It will be used on next run making your bot automatically authenticated and redirected to main game page by server.</p>
+
+<p>Detecting if bot is logged in depends on game mechanic. For Godville it could be done by URL checking after main game page request (/superhero). If bot is not logged in, it will be redirected to /login page.</p>
+
+<div class="bogus-wrapper"><notextile><figure class="code"><figcaption><span></span></figcaption><div class="highlight"><table><tr><td class="gutter"><pre class="line-numbers"><span class="line-number">1</span>
+<span class="line-number">2</span>
+<span class="line-number">3</span>
+<span class="line-number">4</span>
+<span class="line-number">5</span>
+<span class="line-number">6</span>
+<span class="line-number">7</span>
+<span class="line-number">8</span>
+<span class="line-number">9</span>
+<span class="line-number">10</span>
+<span class="line-number">11</span>
+<span class="line-number">12</span>
+</pre></td><td class="code"><pre><code class="javascript"><span class="line"><span class="c1">// try to open /superhero main game page</span>
+</span><span class="line"><span class="nx">page</span><span class="p">.</span><span class="nx">open</span><span class="p">(</span><span class="s1">&#39;http://godvillegame.com/superhero&#39;</span><span class="p">,</span> <span class="kd">function</span><span class="p">()</span> <span class="p">{</span>
+</span><span class="line">  <span class="k">if</span> <span class="p">(</span><span class="nx">page</span><span class="p">.</span><span class="nx">url</span> <span class="o">==</span> <span class="nx">account</span><span class="p">.</span><span class="nx">godvilleUrl</span> <span class="o">+</span> <span class="s1">&#39;/login&#39;</span><span class="p">)</span> <span class="p">{</span>
+</span><span class="line">    <span class="nx">page</span><span class="p">.</span><span class="nx">evaluate</span><span class="p">(</span><span class="kd">function</span><span class="p">()</span> <span class="p">{</span>
+</span><span class="line">      <span class="nx">$</span><span class="p">(</span><span class="s1">&#39;#username&#39;</span><span class="p">).</span><span class="nx">val</span><span class="p">(</span><span class="s1">&#39;login&#39;</span><span class="p">);</span>
+</span><span class="line">      <span class="nx">$</span><span class="p">(</span><span class="s1">&#39;#password&#39;</span><span class="p">).</span><span class="nx">val</span><span class="p">(</span><span class="s1">&#39;password&#39;</span><span class="p">);</span>
+</span><span class="line">      <span class="nx">$</span><span class="p">(</span><span class="s1">&#39;.input_btn&#39;</span><span class="p">).</span><span class="nx">click</span><span class="p">();</span>
+</span><span class="line">    <span class="p">});</span>
+</span><span class="line">  <span class="p">}</span> <span class="k">else</span> <span class="p">{</span>
+</span><span class="line">    <span class="c1">// run main game logic</span>
+</span><span class="line">  <span class="p">}</span>
+</span><span class="line"><span class="p">}</span>
+</span></code></pre></td></tr></table></div></figure></notextile></div>
+
+<p>And there we are! Bot is logged in and obtaining information, you could write game logic on javascript inside evaluate() callback like you’re doing it in browser console. Everything depends on your imagination now. Phantomjs works with websockets so it see dynamic game DOM changes.</p>
+
+<p>For debugging you could use page.render function that makes page screenshot:</p>
+
+<p><code>page.render('example_login.png');</code></p>
+
+<p>and also write console.log output. By default it will not be printed in application console so additional code needed:</p>
+
+<div class="bogus-wrapper"><notextile><figure class="code"><figcaption><span></span></figcaption><div class="highlight"><table><tr><td class="gutter"><pre class="line-numbers"><span class="line-number">1</span>
+<span class="line-number">2</span>
+<span class="line-number">3</span>
+</pre></td><td class="code"><pre><code class="javascript"><span class="line"><span class="nx">page</span><span class="p">.</span><span class="nx">onConsoleMessage</span> <span class="o">=</span> <span class="kd">function</span><span class="p">(</span><span class="nx">msg</span><span class="p">)</span> <span class="p">{</span>
+</span><span class="line">  <span class="nx">console</span><span class="p">.</span><span class="nx">log</span><span class="p">(</span><span class="nx">msg</span><span class="p">);</span> <span class="c1">// or write it in file if you prefer as it done in my repository code</span>
+</span><span class="line"><span class="p">};</span>
+</span></code></pre></td></tr></table></div></figure></notextile></div>
+
+<h2 id="deploy-on-heroku">Deploy on Heroku</h2>
+
+<p>Create application-specific <a href="https://devcenter.heroku.com/articles/procfile">Procfile</a>: <code>worker: phantomjs --cookies-file=cookies.txt bot.js</code></p>
+
+<p>Assuming you have <a href="https://toolbelt.heroku.com/">Heroku toolbelt</a> installed already, do <code>heroku create</code>, then add and commit Procfile and script files to git initialized by this command git repo. Add necessary for phantomjs buildpack:</p>
+
+<div class="bogus-wrapper"><notextile><figure class="code"><figcaption><span></span></figcaption><div class="highlight"><table><tr><td class="gutter"><pre class="line-numbers"><span class="line-number">1</span>
+<span class="line-number">2</span>
+</pre></td><td class="code"><pre><code class="bash"><span class="line">heroku config:add <span class="nv">BUILDPACK_URL</span><span class="o">=</span>https://github.com/ddollar/heroku-buildpack-multi.git
+</span><span class="line">heroku config:set <span class="nv">PATH</span><span class="o">=</span><span class="s2">&quot;/usr/local/bin:/usr/bin:/bin:/app/vendor/phantomjs/bin&quot;</span>
+</span></code></pre></td></tr></table></div></figure></notextile></div>
+
+<p>and then push your changes: <code>git push heroku master</code>.</p>
+
+<p>Make sure that your worker is running: <code>heroku ps:scale worker=1</code></p>
+
+<p>That’s it. And there’s <a href="https://github.com/Firfi/gvchatbot">my bot repository</a></p>
+
+]]></content>
+  </entry>
+  
+</feed>

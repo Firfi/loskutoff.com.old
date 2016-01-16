@@ -1,0 +1,94 @@
+<?xml version="1.0" encoding="utf-8"?>
+<feed xmlns="http://www.w3.org/2005/Atom">
+
+  <title><![CDATA[Category: Games | firfiBlog]]></title>
+  <link href="http://loskutoff.com/blog/categories/games/atom.xml" rel="self"/>
+  <link href="http://loskutoff.com/"/>
+  <updated>2016-01-16T11:05:55+03:00</updated>
+  <id>http://loskutoff.com/</id>
+  <author>
+    <name><![CDATA[Igor Loskutoff]]></name>
+    <email><![CDATA[igor.loskutoff@gmail.com]]></email>
+  </author>
+  <generator uri="http://octopress.org/">Octopress</generator>
+
+  
+  <entry>
+    <title type="html"><![CDATA[Writing a Bot for Online Browser Game With PhantomJS]]></title>
+    <link href="http://loskutoff.com/blog/writing-a-bot-for-online-browser-game-with-phantomjs/"/>
+    <updated>2014-03-28T12:18:18+04:00</updated>
+    <id>http://loskutoff.com/blog/writing-a-bot-for-online-browser-game-with-phantomjs</id>
+    <content type="html"><![CDATA[<p>Phantomjs could be used for frontend functional testing.</p>
+
+<p>Sometimes it could be used for <a href="http://www.yearofmoo.com/2012/11/angularjs-and-seo.html">rich web application html snapshots for search engine crawlers</a></p>
+
+<p>Let’s use it for cheating.</p>
+
+<p>In this article I’ll describe creating process of very simple html+js online game bot that running headlessly 24/7 on remote server (I’ll use <a href="https://herokuapp.com/">Heroku</a>).</p>
+
+<!--more-->
+
+<p>I will assume that reader is familiar with <a href="http://phantomjs.org/download.html">phantomjs installation</a>. In this example I’ll use online <a href="http://ru.wikipedia.org/wiki/Zero_Player_Game">ZPG</a> <a href="http://godvillegame.com/">Godville</a>.</p>
+
+<h2 id="login-and-main-game-logic">Login and main game logic</h2>
+
+<p>There’s basically two lifecycle parts that need to be maintained: authentication and main lifecycle.</p>
+
+<p>First and most easy way to do authentication is just fill login/pass fields on each run. It is not the best way because game could use captcha after several requests (and Godville is using it) so let’s plug in cookies:</p>
+
+<p><code>phantomjs --cookies-file=cookies.txt bot.js</code></p>
+
+<p>Where bot.js is main script file. File cookies.txt will be created automatically and will remain in project folder after you stop application. It will be used on next run making your bot automatically authenticated and redirected to main game page by server.</p>
+
+<p>Detecting if bot is logged in depends on game mechanic. For Godville it could be done by URL checking after main game page request (/superhero). If bot is not logged in, it will be redirected to /login page.</p>
+
+<p><code>javascript
+// try to open /superhero main game page
+page.open('http://godvillegame.com/superhero', function() {
+  if (page.url == account.godvilleUrl + '/login') {
+    page.evaluate(function() {
+      $('#username').val('login');
+      $('#password').val('password');
+      $('.input_btn').click();
+    });
+  } else {
+    // run main game logic
+  }
+}
+</code></p>
+
+<p>And there we are! Bot is logged in and obtaining information, you could write game logic on javascript inside evaluate() callback like you’re doing it in browser console. Everything depends on your imagination now. Phantomjs works with websockets so it see dynamic game DOM changes.</p>
+
+<p>For debugging you could use page.render function that makes page screenshot:</p>
+
+<p><code>page.render('example_login.png');</code></p>
+
+<p>and also write console.log output. By default it will not be printed in application console so additional code needed:</p>
+
+<p><code>javascript
+page.onConsoleMessage = function(msg) {
+  console.log(msg); // or write it in file if you prefer as it done in my repository code
+};
+</code></p>
+
+<h2 id="deploy-on-heroku">Deploy on Heroku</h2>
+
+<p>Create application-specific <a href="https://devcenter.heroku.com/articles/procfile">Procfile</a>: <code>worker: phantomjs --cookies-file=cookies.txt bot.js</code></p>
+
+<p>Assuming you have <a href="https://toolbelt.heroku.com/">Heroku toolbelt</a> installed already, do <code>heroku create</code>, then add and commit Procfile and script files to git initialized by this command git repo. Add necessary for phantomjs buildpack:</p>
+
+<p><code>bash
+heroku config:add BUILDPACK_URL=https://github.com/ddollar/heroku-buildpack-multi.git
+heroku config:set PATH="/usr/local/bin:/usr/bin:/bin:/app/vendor/phantomjs/bin"
+</code></p>
+
+<p>and then push your changes: <code>git push heroku master</code>.</p>
+
+<p>Make sure that your worker is running: <code>heroku ps:scale worker=1</code></p>
+
+<p>That’s it. And there’s <a href="https://github.com/Firfi/gvchatbot">my bot repository</a></p>
+
+]]></content>
+  </entry>
+  
+</feed>

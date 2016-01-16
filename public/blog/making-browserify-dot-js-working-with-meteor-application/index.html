@@ -1,0 +1,310 @@
+
+<!DOCTYPE html>
+<!--[if IEMobile 7 ]><html class="no-js iem7"><![endif]-->
+<!--[if lt IE 9]><html class="no-js lte-ie8"><![endif]-->
+<!--[if (gt IE 8)|(gt IEMobile 7)|!(IEMobile)|!(IE)]><!--><html class="no-js" lang="en"><!--<![endif]-->
+<head>
+  <meta charset="utf-8">
+  <title>Making browserify.js Working With Meteor Application - firfiBlog</title>
+  <meta name="author" content="Igor Loskutoff">
+
+  
+  <meta name="description" content="In previous post
+I described how to wrap existing npm (especially React-related) packages into Meteor packages to use them in your application. This &hellip;">
+  
+
+  <!-- http://t.co/dKP3o1e -->
+  <meta name="HandheldFriendly" content="True">
+  <meta name="MobileOptimized" content="320">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+
+  
+  <link rel="canonical" href="http://loskutoff.com/blog/making-browserify-dot-js-working-with-meteor-application">
+  <link href="/favicon.png" rel="icon">
+  <link href="/stylesheets/bootstrap.css" media="screen, projection" rel="stylesheet" type="text/css">
+  <link href="/stylesheets/main.css" media="screen, projection" rel="stylesheet" type="text/css">
+  <link href="/atom.xml" rel="alternate" title="firfiBlog" type="application/atom+xml">
+  <script src="/javascripts/modernizr-2.0.js"></script>
+  <script src="//ajax.googleapis.com/ajax/libs/jquery/1.9.1/jquery.min.js"></script>
+  <script>!window.jQuery && document.write(unescape('%3Cscript src="./javascripts/libs/jquery.min.js"%3E%3C/script%3E'))</script>
+  <script src="/javascripts/octopress.js" type="text/javascript"></script>
+  <script src="/javascripts/bootstrap.min.js" type="text/javascript"></script>
+  <!--Fonts from Google"s Web font directory at http://google.com/webfonts -->
+<link href="//fonts.googleapis.com/css?family=PT+Serif:regular,italic,bold,bolditalic" rel="stylesheet" type="text/css">
+<link href="//fonts.googleapis.com/css?family=PT+Sans:regular,italic,bold,bolditalic" rel="stylesheet" type="text/css">
+
+  
+  <script type="text/javascript">
+    var _gaq = _gaq || [];
+    _gaq.push(['_setAccount', 'UA-49499579-1']);
+    _gaq.push(['_trackPageview']);
+
+    (function() {
+      var ga = document.createElement('script'); ga.type = 'text/javascript'; ga.async = true;
+      ga.src = ('https:' == document.location.protocol ? 'https://ssl' : 'http://www') + '.google-analytics.com/ga.js';
+      var s = document.getElementsByTagName('script')[0]; s.parentNode.insertBefore(ga, s);
+    })();
+  </script>
+
+
+</head>
+
+<body   >
+  <header role="banner"><div class="navbar navbar-inverse navbar-static-top">
+    <!--<div class="container">-->
+        <!--<ul class="nav navbar-nav navbar-right secondary" data-subscription="rss">-->
+            <!--<li><a href="/atom.xml" rel="subscribe-rss" title="subscribe via RSS">RSS</a></li>-->
+            <!---->
+            <!---->
+           <!--<li>-->
+               <!--<form action="https://www.google.com/search" method="get">-->
+                    <!--<fieldset role="search">-->
+                        <!--<input type="hidden" name="q" value="site:loskutoff.com" />-->
+                        <!--<input class="search" type="text" name="q" results="0" placeholder="Search"/>-->
+                    <!--</fieldset>-->
+                <!--</form>-->
+           <!--</li>-->
+            <!---->
+        <!--</ul>-->
+
+    <!--</div>-->
+    <div class="container">
+        <div class="navbar-header">
+            <button type="button" class="navbar-toggle" data-toggle="collapse" data-target=".navbar-collapse">
+                <span class="icon-bar"></span>
+                <span class="icon-bar"></span>
+                <span class="icon-bar"></span>
+            </button>
+            <a class="navbar-brand" href="/index.html">firfiBlog</a>
+            <!---->
+            <!--<p>Everything about ponies, unicorns and pegasi (rainbow ones)</p>-->
+            <!---->
+        </div>
+        <div class="navbar-collapse collapse">
+            <nav role="navigation"><ul class="nav navbar-nav navbar-right">
+    <li><a href="/">Blog</a></li>
+    <li><a href="/about">About</a></li>
+</ul>
+
+</nav>
+        </div><!--/.nav-collapse -->
+    </div>
+</div>
+
+</header>
+  <div id="main">
+    <div id="content">
+      <div class="white"><div class="container"><div class="row"><div class="col-lg-8 col-lg-offset-2">
+<article class="hentry" role="article">
+  
+  <header>
+    
+    <p class="meta">
+      
+
+
+
+
+
+
+
+
+  
+
+
+<time datetime="2015-06-16T17:33:52+03:00" pubdate data-updated="true">Jun 16<span>th</span>, 2015</time>
+      
+    </p>
+    
+    
+    <h1 class="entry-title">Making browserify.js Working With Meteor Application</h1>
+    
+
+  </header>
+
+
+<div class="entry-content"><p>In previous <a href="http://www.loskutoff.com/blog/using-reactjs-as-a-meteorjs-views/">post</a>
+I described how to wrap existing npm (especially React-related) packages into Meteor packages to use them in your application.</p>
+
+<p>This way was quite hacky and was involving manual build modification, as well as forking existing libraries and committing build distributions in those forks.</p>
+
+<p>I choose this way as there wasn’t a way to <a href="http://browserify.org/">browserify</a> packages on meteor application build step.</p>
+
+<p>That really delighted me when I found that Eli Doran (https://github.com/elidoran) recently wrote custom <a href="https://github.com/elidoran/cosmos-browserify">build plugin</a>
+that finally enable us to include browserifyed React packages without writing those terrible wrappers!</p>
+
+<p>From now I deprecate my libraries that I ported for <a href="https://atmospherejs.com/">Atmosphere</a> package manager and recommend to those who still use wrapped packages move to Browserify with cosmos-browserify library help.</p>
+
+<p>Below I’ll describe how I moved my project from wrapped atmosphere packages to browserifyed components with <a href="https://github.com/elidoran/cosmos-browserify">cosmos-browserify</a>.</p>
+
+<!--more-->
+
+<h2 id="migrating-to-right-way-of-libraries-usage">Migrating to ‘right way’ of libraries usage</h2>
+
+<p>Let’s presume we have <code>firfi:meteor-react-bootstrap</code> package installed. It exports <code>ReactBootstrap</code> global for us.</p>
+
+<p>Only one line of code that makes that possible is <code>firfi:meteor-react-bootstrap</code> in .meteor/packages. It was added either manuall or with <code>meteor add firfi:meteor-react-bootstrap</code> command.</p>
+
+<p>Now, let’s remove it and substitute with browserifyed version.</p>
+
+<h3 id="adding-browserifyed-library-to-our-meteor-application">Adding browserifyed library to our Meteor application</h3>
+
+<p>I’ll go with local package way. This way, all browserifyed libraries will be available in all parts of your code as local packages being loaded before all other app code.</p>
+
+<p>First let’s create a package in folder packages. Let’s call it <code>client-deps</code>, so final created path would be <code>packages/client-deps</code>.</p>
+
+<p>To make Meteor identify it as a package, we should add file package.js there:</p>
+
+<div><div class="CodeRay">
+  <div class="code"><pre><span style="color:#777">// packages/client-deps/package.js</span>
+
+Package.describe({
+  <span style="color:#606">name</span>: <span style="background-color:hsla(0,100%,50%,0.05)"><span style="color:#710">'</span><span style="color:#D20">client-deps</span><span style="color:#710">'</span></span>
+});
+
+Npm.depends({
+  <span style="color:#606"><span style="color:#404">'</span><span>react-bootstrap</span><span style="color:#404">'</span></span>: <span style="background-color:hsla(0,100%,50%,0.05)"><span style="color:#710">'</span><span style="color:#D20">0.23.3</span><span style="color:#710">'</span></span>, <span style="color:#777">// this library will be browserifyed later</span>
+  <span style="color:#606">react</span> : <span style="background-color:hsla(0,100%,50%,0.05)"><span style="color:#710">'</span><span style="color:#D20">0.13.3</span><span style="color:#710">'</span></span> <span style="color:#777">// we'll also add react itself so react-bootstrap doesn't feel loneliness</span>
+});
+
+Package.onUse(<span style="color:#080;font-weight:bold">function</span>(api) {
+  api.use([<span style="background-color:hsla(0,100%,50%,0.05)"><span style="color:#710">'</span><span style="color:#D20">cosmos:browserify@0.3.0</span><span style="color:#710">'</span></span>]); <span style="color:#777">// insert the latest version here</span>
+  api.addFiles([<span style="background-color:hsla(0,100%,50%,0.05)"><span style="color:#710">'</span><span style="color:#D20">app.browserify.js</span><span style="color:#710">'</span></span>]); <span style="color:#777">// we'll create this file below</span>
+  api.<span style="color:#080;font-weight:bold">export</span>([<span style="background-color:hsla(0,100%,50%,0.05)"><span style="color:#710">'</span><span style="color:#D20">ReactBootstrap</span><span style="color:#710">'</span></span>, <span style="background-color:hsla(0,100%,50%,0.05)"><span style="color:#710">'</span><span style="color:#D20">React</span><span style="color:#710">'</span></span>]); <span style="color:#777">// it's exported in app.browserify.js</span>
+});
+
+</pre></div>
+</div>
+</div>
+
+<p>To tell which libraries we’ll browserify we need a .browserify file which will be handled by cosmos-browserify build plugin.</p>
+
+<p>Cosmos-browserify will unwrap all require()’d libraries in browserify bundles.</p>
+
+<div><div class="CodeRay">
+  <div class="code"><pre><span style="color:#777">// packages/client-deps/app.browserify.js</span>
+React = require(<span style="background-color:hsla(0,100%,50%,0.05)"><span style="color:#710">'</span><span style="color:#D20">react/addons</span><span style="color:#710">'</span></span>);
+ReactBootstrap = require(<span style="background-color:hsla(0,100%,50%,0.05)"><span style="color:#710">'</span><span style="color:#D20">react-bootstrap</span><span style="color:#710">'</span></span>); <span style="color:#777">// export it 'globally' so Meteor is happy and can `api.export` it in package.js</span>
+</pre></div>
+</div>
+</div>
+
+<p>And, to make it all work, you should finally install cosmos-browserify itself: <code>meteor add cosmos:browserify</code>
+and point your meteor app that it should use your local package: <code>meteor add client-deps</code></p>
+
+<p>Don’t forget to delete old libraries that were exporting your <code>ReactBootstrap</code> and <code>React</code>. In my case it was
+<code>firfi:meteor-react-bootstrap</code> (that was depending on old version of https://github.com/grovelabs/meteor-react with React exported).</p>
+
+<p>If after this you still get some react warnings it is quite possible you still have some libraries that exporting or using internally it’s own React versions. In that case just browserify it too,
+as I had to do with <code>reactjs:react</code>, <code>firfi:griddle-react</code>, <code>dgellow:react-loader</code> and <code>firfi:tcomb-form</code>.</p>
+
+<p>With definitely more boilerplate you get latest versions of all npm libraries existing without third-party wrappers and also have it included ‘right way’. Happy meteor coding!</p>
+</div>
+
+
+  <footer>
+    <p class="meta">
+      
+  
+
+<span class="byline author vcard">Posted by <span class="fn">Igor Loskutoff</span></span>
+
+      
+
+
+
+
+
+
+
+
+  
+
+
+<time datetime="2015-06-16T17:33:52+03:00" pubdate data-updated="true">Jun 16<span>th</span>, 2015</time>
+      
+
+<span class="categories">
+  
+    <a class='category' href='/blog/categories/browserify/'>browserify</a>, <a class='category' href='/blog/categories/meteorjs/'>meteorjs,</a>, <a class='category' href='/blog/categories/reactjs/'>reactjs,</a>
+  
+</span>
+
+
+    </p>
+    
+      <div class="sharing">
+  
+  
+  
+</div>
+
+    
+    <p class="meta">
+      
+        <a class="basic-alignment left" href="/blog/using-reactjs-as-a-meteorjs-views/" title="Previous Post: Using ReactJS as a MeteorJS view layer">&laquo; Using ReactJS as a MeteorJS view layer</a>
+      
+      
+    </p>
+  </footer>
+</article>
+
+  <section>
+    <h1>Comments</h1>
+    <div id="disqus_thread" aria-live="polite"><noscript>Please enable JavaScript to view the <a href="http://disqus.com/?ref_noscript">comments powered by Disqus.</a></noscript>
+</div>
+  </section>
+
+</div></div></div></div>
+    </div>
+  </div>
+  <footer role="contentinfo"><div id="footer"><div class="container"><div class="row">
+    <div class="col-lg-4 col-lg-offset-2">
+        <h4>Contacts</h4>
+        <p>
+            igor@loskutoff.com
+            <br/>
+            Skype: <a href="skype:igor.loskutoff?chat">igor.loskutoff</a>
+        </p>
+
+    </div>
+    <div class="col-lg-4 col-lg-offset-2">
+        <p>
+            Copyright &copy; 2016
+            <br/>
+            <span class="credit">Powered by <a href="http://octopress.org">Octopress</a></span>
+        </p>
+    </div>
+    </div></div></div>
+
+</footer>
+  
+
+<script type="text/javascript">
+      var disqus_shortname = 'firfiblog';
+      
+        
+        // var disqus_developer = 1;
+        var disqus_identifier = 'http://loskutoff.com/blog/making-browserify-dot-js-working-with-meteor-application/';
+        var disqus_url = 'http://loskutoff.com/blog/making-browserify-dot-js-working-with-meteor-application/';
+        var disqus_script = 'embed.js';
+      
+    (function () {
+      var dsq = document.createElement('script'); dsq.type = 'text/javascript'; dsq.async = true;
+      dsq.src = '//' + disqus_shortname + '.disqus.com/' + disqus_script;
+      (document.getElementsByTagName('head')[0] || document.getElementsByTagName('body')[0]).appendChild(dsq);
+    }());
+</script>
+
+
+
+
+
+
+
+
+
+
+
+</body>
+</html>

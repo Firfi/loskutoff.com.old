@@ -1,0 +1,397 @@
+
+<!DOCTYPE html>
+<!--[if IEMobile 7 ]><html class="no-js iem7"><![endif]-->
+<!--[if lt IE 9]><html class="no-js lte-ie8"><![endif]-->
+<!--[if (gt IE 8)|(gt IEMobile 7)|!(IEMobile)|!(IE)]><!--><html class="no-js" lang="en"><!--<![endif]-->
+<head>
+  <meta charset="utf-8">
+  <title>Using ReactJS as a MeteorJS View Layer - firfiBlog</title>
+  <meta name="author" content="Igor Loskutoff">
+
+  
+  <meta name="description" content="Here I’ll share actual on this day way to use ReactJS with Meteor. The basic setup itself rather simple,
+so after shortly describing it, I’ll touch a &hellip;">
+  
+
+  <!-- http://t.co/dKP3o1e -->
+  <meta name="HandheldFriendly" content="True">
+  <meta name="MobileOptimized" content="320">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+
+  
+  <link rel="canonical" href="http://loskutoff.com/blog/using-reactjs-as-a-meteorjs-views">
+  <link href="/favicon.png" rel="icon">
+  <link href="/stylesheets/bootstrap.css" media="screen, projection" rel="stylesheet" type="text/css">
+  <link href="/stylesheets/main.css" media="screen, projection" rel="stylesheet" type="text/css">
+  <link href="/atom.xml" rel="alternate" title="firfiBlog" type="application/atom+xml">
+  <script src="/javascripts/modernizr-2.0.js"></script>
+  <script src="//ajax.googleapis.com/ajax/libs/jquery/1.9.1/jquery.min.js"></script>
+  <script>!window.jQuery && document.write(unescape('%3Cscript src="./javascripts/libs/jquery.min.js"%3E%3C/script%3E'))</script>
+  <script src="/javascripts/octopress.js" type="text/javascript"></script>
+  <script src="/javascripts/bootstrap.min.js" type="text/javascript"></script>
+  <!--Fonts from Google"s Web font directory at http://google.com/webfonts -->
+<link href="//fonts.googleapis.com/css?family=PT+Serif:regular,italic,bold,bolditalic" rel="stylesheet" type="text/css">
+<link href="//fonts.googleapis.com/css?family=PT+Sans:regular,italic,bold,bolditalic" rel="stylesheet" type="text/css">
+
+  
+  <script type="text/javascript">
+    var _gaq = _gaq || [];
+    _gaq.push(['_setAccount', 'UA-49499579-1']);
+    _gaq.push(['_trackPageview']);
+
+    (function() {
+      var ga = document.createElement('script'); ga.type = 'text/javascript'; ga.async = true;
+      ga.src = ('https:' == document.location.protocol ? 'https://ssl' : 'http://www') + '.google-analytics.com/ga.js';
+      var s = document.getElementsByTagName('script')[0]; s.parentNode.insertBefore(ga, s);
+    })();
+  </script>
+
+
+</head>
+
+<body   >
+  <header role="banner"><div class="navbar navbar-inverse navbar-static-top">
+    <!--<div class="container">-->
+        <!--<ul class="nav navbar-nav navbar-right secondary" data-subscription="rss">-->
+            <!--<li><a href="/atom.xml" rel="subscribe-rss" title="subscribe via RSS">RSS</a></li>-->
+            <!---->
+            <!---->
+           <!--<li>-->
+               <!--<form action="https://www.google.com/search" method="get">-->
+                    <!--<fieldset role="search">-->
+                        <!--<input type="hidden" name="q" value="site:loskutoff.com" />-->
+                        <!--<input class="search" type="text" name="q" results="0" placeholder="Search"/>-->
+                    <!--</fieldset>-->
+                <!--</form>-->
+           <!--</li>-->
+            <!---->
+        <!--</ul>-->
+
+    <!--</div>-->
+    <div class="container">
+        <div class="navbar-header">
+            <button type="button" class="navbar-toggle" data-toggle="collapse" data-target=".navbar-collapse">
+                <span class="icon-bar"></span>
+                <span class="icon-bar"></span>
+                <span class="icon-bar"></span>
+            </button>
+            <a class="navbar-brand" href="/index.html">firfiBlog</a>
+            <!---->
+            <!--<p>Everything about ponies, unicorns and pegasi (rainbow ones)</p>-->
+            <!---->
+        </div>
+        <div class="navbar-collapse collapse">
+            <nav role="navigation"><ul class="nav navbar-nav navbar-right">
+    <li><a href="/">Blog</a></li>
+    <li><a href="/about">About</a></li>
+</ul>
+
+</nav>
+        </div><!--/.nav-collapse -->
+    </div>
+</div>
+
+</header>
+  <div id="main">
+    <div id="content">
+      <div class="white"><div class="container"><div class="row"><div class="col-lg-8 col-lg-offset-2">
+<article class="hentry" role="article">
+  
+  <header>
+    
+    <p class="meta">
+      
+
+
+
+
+
+
+
+
+  
+
+
+<time datetime="2015-04-17T15:55:17+03:00" pubdate data-updated="true">Apr 17<span>th</span>, 2015</time>
+      
+    </p>
+    
+    
+    <h1 class="entry-title">Using ReactJS as a MeteorJS View Layer</h1>
+    
+
+  </header>
+
+
+<div class="entry-content"><p>Here I’ll share actual on this day way to use ReactJS with Meteor. The basic setup itself rather simple,
+so after shortly describing it, I’ll touch a matters of using third-party React packages.</p>
+
+<!--more-->
+
+<h2 id="using-react-components-in-meteor-applications">Using React components in Meteor applications</h2>
+
+<p>To basic setup React and jsx transformation pipeline it is enough to install this package https://github.com/reactjs/react-meteor</p>
+
+<p>Also, it offers you a special mixin for tying together Meteor reactive sources and your component state, but I found it problematical to use in current state
+(i.e. your getMeteorState function will be executed everytime your main state is changed with setState).</p>
+
+<p>It can sometimes be annoying, but in general, if you don’t mind it, you can use it as well.</p>
+
+<p>Another option can be using subscriptions on componentWillMount and unsubscribe it in componentWillUnmount like this:</p>
+
+<div><div class="CodeRay">
+  <div class="code"><pre>
+<span style="color:#06B;font-weight:bold">componentWillMount</span>: <span style="color:#080;font-weight:bold">function</span>() {
+    <span style="color:#950">this</span>._cancelSubscription = Tracker.autorun(...);
+}
+
+<span style="color:#06B;font-weight:bold">componentWillUnmount</span>: <span style="color:#080;font-weight:bold">function</span>() {
+    <span style="color:#950">this</span>._cancelSubscription();
+}
+
+</pre></div>
+</div>
+</div>
+
+<p>Sometimes I find Tracker.autorun not enough, and currently use some service for data fetching, abstracting it and exposing reactive stream
+backed up by BaconJS library (it could be rxJS as well). It looks almost the same as in example above; you get subscription in componentWillMount
+and unsubscribe in componentWillUnmount.</p>
+
+<p>Another possible solution is using any Flux flavours, and listen to Storages.</p>
+
+<p>One another problem I faced with is using React in current project that written with Blaze already with some of Meteor routing libraries (I use iron router)
+React components doesn’t know anything about your route change or Blaze template destruction and stays on your screen.</p>
+
+<p>To address this issue, I wrap components in Blaze templates, hooking template create/destroy livecycle callbacks:</p>
+
+<div><div class="CodeRay">
+  <div class="code"><pre><span style="color:#777">// some code omitted, I left only relevant to issue one</span>
+_ReactUtils.<span style="color:#06B;font-weight:bold">createClass</span> = <span style="color:#080;font-weight:bold">function</span>(opts) {
+  <span style="color:#080;font-weight:bold">var</span> templateName = opts.templateName;
+  <span style="color:#080;font-weight:bold">var</span> templateClass = <span style="color:#080;font-weight:bold">new</span> Template(
+    templateName,
+    <span style="color:#080;font-weight:bold">function</span>() {
+      <span style="color:#080;font-weight:bold">return</span> <span style="color:#080;font-weight:bold">new</span> HTML.DIV;
+    }
+  );
+  Template[templateName] = templateClass;
+  <span style="color:#080;font-weight:bold">var</span> Component = React.createClass(opts);
+  templateClass.onRendered(<span style="color:#080;font-weight:bold">function</span>() {
+    <span style="color:#080;font-weight:bold">var</span> template = <span style="color:#950">this</span>;
+    <span style="color:#080;font-weight:bold">var</span> data = <span style="color:#950">this</span>.data || {};
+    <span style="color:#080;font-weight:bold">var</span> c = React.createElement(Component, data);
+    c._meteorTemplate = template;
+    template._reactComponent = React.render(c, template.firstNode);
+  });
+  templateClass.onDestroyed(<span style="color:#080;font-weight:bold">function</span>() {
+    <span style="color:#080;font-weight:bold">var</span> template = <span style="color:#950">this</span>;
+    React.unmountComponentAtNode(template._reactComponent.getDOMNode());
+  });
+  <span style="color:#080;font-weight:bold">return</span> Component;
+};
+</pre></div>
+</div>
+</div>
+
+<p>With this approach, I can just replace my Blaze components one by one, i.e.</p>
+
+<div><div class="CodeRay">
+  <div class="code"><pre><span style="color:#070;font-weight:bold">&lt;template</span> <span style="color:#b48">name</span>=<span style="background-color:hsla(0,100%,50%,0.05)"><span style="color:#710">&quot;</span><span style="color:#D20">indexPage</span><span style="color:#710">&quot;</span></span><span style="color:#070;font-weight:bold">&gt;</span>
+    
+    
+<span style="color:#070;font-weight:bold">&lt;/template&gt;</span>
+</pre></div>
+</div>
+</div>
+
+<p>And when I’m ready to switch another component to React,</p>
+
+<div><div class="CodeRay">
+  <div class="code"><pre><span style="color:#070;font-weight:bold">&lt;template</span> <span style="color:#b48">name</span>=<span style="background-color:hsla(0,100%,50%,0.05)"><span style="color:#710">&quot;</span><span style="color:#D20">indexPage</span><span style="color:#710">&quot;</span></span><span style="color:#070;font-weight:bold">&gt;</span>
+    
+    
+<span style="color:#070;font-weight:bold">&lt;/template&gt;</span>
+</pre></div>
+</div>
+</div>
+
+<p>If you start a new project, you can use some of React routers I suppose. I didn’t investigated this matter yet.</p>
+
+<h2 id="using-third-party-react-packages-in-meteor">Using third-party React packages in Meteor</h2>
+
+<p>Huge problem I faced with was lack of pre-build step in packages as well as impossibility to use browserify on client-side.</p>
+
+<p>Many React libraries use require() and doesn’t have build distributive available in repository, so if there’s no such Meteor package you have to build it yourself.</p>
+
+<p>What I do usually is use webpack, excluding React from build (as we’ll depend on react-meteor package in our package-wrapper).</p>
+
+<div><div class="CodeRay">
+  <div class="code"><pre>module.exports = {
+    <span style="color:#606">entry</span>: <span style="background-color:hsla(0,100%,50%,0.05)"><span style="color:#710">&quot;</span><span style="color:#D20">./index.js</span><span style="color:#710">&quot;</span></span>,
+    <span style="color:#606">output</span>: {
+        <span style="color:#606">path</span>: __dirname,
+        <span style="color:#606">filename</span>: <span style="background-color:hsla(0,100%,50%,0.05)"><span style="color:#710">&quot;</span><span style="color:#D20">dist/meteor-dist.js</span><span style="color:#710">&quot;</span></span>,
+        <span style="color:#606">libraryTarget</span>: <span style="background-color:hsla(0,100%,50%,0.05)"><span style="color:#710">&quot;</span><span style="color:#D20">umd</span><span style="color:#710">&quot;</span></span>,
+        <span style="color:#606">library</span>: <span style="background-color:hsla(0,100%,50%,0.05)"><span style="color:#710">&quot;</span><span style="color:#D20">MyLibrary</span><span style="color:#710">&quot;</span></span>
+    },
+    <span style="color:#606">externals</span>: {
+        <span style="color:#606">react</span>: <span style="background-color:hsla(0,100%,50%,0.05)"><span style="color:#710">'</span><span style="color:#D20">React</span><span style="color:#710">'</span></span>
+    }
+};
+</pre></div>
+</div>
+</div>
+
+<p>Here, ‘react’ library would be excluded and will be referenced as a React on global object that we have already,
+and library itself will be exported as MyLibrary.</p>
+
+<p>Then you can run webpack and it’ll create distributive that can be used in Meteor package description:</p>
+
+<div><div class="CodeRay">
+  <div class="code"><pre>Package.onUse(<span style="color:#080;font-weight:bold">function</span>(api) {
+  api.use(<span style="background-color:hsla(0,100%,50%,0.05)"><span style="color:#710">'</span><span style="color:#D20">reactjs:react@0.2.1</span><span style="color:#710">'</span></span>, [<span style="background-color:hsla(0,100%,50%,0.05)"><span style="color:#710">'</span><span style="color:#D20">client</span><span style="color:#710">'</span></span>, <span style="background-color:hsla(0,100%,50%,0.05)"><span style="color:#710">'</span><span style="color:#D20">server</span><span style="color:#710">'</span></span>]);
+  api.addFiles(<span style="background-color:hsla(0,100%,50%,0.05)"><span style="color:#710">'</span><span style="color:#D20">dist/meteor-dist.js</span><span style="color:#710">'</span></span>, [<span style="background-color:hsla(0,100%,50%,0.05)"><span style="color:#710">'</span><span style="color:#D20">client</span><span style="color:#710">'</span></span>, <span style="background-color:hsla(0,100%,50%,0.05)"><span style="color:#710">'</span><span style="color:#D20">server</span><span style="color:#710">'</span></span>]);
+  api.<span style="color:#080;font-weight:bold">export</span>(<span style="background-color:hsla(0,100%,50%,0.05)"><span style="color:#710">'</span><span style="color:#D20">MyLibrary</span><span style="color:#710">'</span></span>, [<span style="background-color:hsla(0,100%,50%,0.05)"><span style="color:#710">'</span><span style="color:#D20">client</span><span style="color:#710">'</span></span>, <span style="background-color:hsla(0,100%,50%,0.05)"><span style="color:#710">'</span><span style="color:#D20">server</span><span style="color:#710">'</span></span>]);
+});
+</pre></div>
+</div>
+</div>
+
+<p>However, that wouldn’t work. Reasons are described in my previous post, so there’s just a solution: in your dist, manually
+create an object with React from global scope, pass it into dist function, then extract MyLibrary from it back to the global scope.</p>
+
+<p>It’ll look like that:</p>
+
+<div><div class="CodeRay">
+  <div class="code"><pre><span style="color:#080;font-weight:bold">var</span> meteorHack = {
+  <span style="color:#606">React</span>: React
+};
+(<span style="color:#080;font-weight:bold">function</span> <span style="color:#06B;font-weight:bold">webpackUniversalModuleDefinition</span>(root, factory) {
+    ...
+})(meteorHack, ...) <span style="color:#777">// here, meteorHack instead of this</span>
+
+...
+
+MyLibrary = meteorHack.MyLibrary;
+
+</pre></div>
+</div>
+</div>
+
+<p>Pay attention that we pass <code>meteorHack</code> object instead of <code>this</code> as it wouldn’t work as expected with <code>this</code>.</p>
+
+<p>Now you can check the library locally with a symlink and publish to Meteor repository.</p>
+
+<p>My last recommendation here will be making it a fork of original library rather than creating own repository, this way you can
+pull updates and generally have things tracked better.</p>
+</div>
+
+
+  <footer>
+    <p class="meta">
+      
+  
+
+<span class="byline author vcard">Posted by <span class="fn">Igor Loskutoff</span></span>
+
+      
+
+
+
+
+
+
+
+
+  
+
+
+<time datetime="2015-04-17T15:55:17+03:00" pubdate data-updated="true">Apr 17<span>th</span>, 2015</time>
+      
+
+<span class="categories">
+  
+    <a class='category' href='/blog/categories/meteorjs/'>meteorjs,</a>, <a class='category' href='/blog/categories/reactjs/'>reactjs</a>
+  
+</span>
+
+
+    </p>
+    
+      <div class="sharing">
+  
+  
+  
+</div>
+
+    
+    <p class="meta">
+      
+        <a class="basic-alignment left" href="/blog/meteorjs-born-to-be-legacy/" title="Previous Post: Born to be legacy, or MeteorJS: fractal of helloworld-oriented design">&laquo; Born to be legacy, or MeteorJS: fractal of helloworld-oriented design</a>
+      
+      
+        <a class="basic-alignment right" href="/blog/making-browserify-dot-js-working-with-meteor-application/" title="Next Post: Making browserify.js working with Meteor application">Making browserify.js working with Meteor application &raquo;</a>
+      
+    </p>
+  </footer>
+</article>
+
+  <section>
+    <h1>Comments</h1>
+    <div id="disqus_thread" aria-live="polite"><noscript>Please enable JavaScript to view the <a href="http://disqus.com/?ref_noscript">comments powered by Disqus.</a></noscript>
+</div>
+  </section>
+
+</div></div></div></div>
+    </div>
+  </div>
+  <footer role="contentinfo"><div id="footer"><div class="container"><div class="row">
+    <div class="col-lg-4 col-lg-offset-2">
+        <h4>Contacts</h4>
+        <p>
+            igor@loskutoff.com
+            <br/>
+            Skype: <a href="skype:igor.loskutoff?chat">igor.loskutoff</a>
+        </p>
+
+    </div>
+    <div class="col-lg-4 col-lg-offset-2">
+        <p>
+            Copyright &copy; 2016
+            <br/>
+            <span class="credit">Powered by <a href="http://octopress.org">Octopress</a></span>
+        </p>
+    </div>
+    </div></div></div>
+
+</footer>
+  
+
+<script type="text/javascript">
+      var disqus_shortname = 'firfiblog';
+      
+        
+        // var disqus_developer = 1;
+        var disqus_identifier = 'http://loskutoff.com/blog/using-reactjs-as-a-meteorjs-views/';
+        var disqus_url = 'http://loskutoff.com/blog/using-reactjs-as-a-meteorjs-views/';
+        var disqus_script = 'embed.js';
+      
+    (function () {
+      var dsq = document.createElement('script'); dsq.type = 'text/javascript'; dsq.async = true;
+      dsq.src = '//' + disqus_shortname + '.disqus.com/' + disqus_script;
+      (document.getElementsByTagName('head')[0] || document.getElementsByTagName('body')[0]).appendChild(dsq);
+    }());
+</script>
+
+
+
+
+
+
+
+
+
+
+
+</body>
+</html>

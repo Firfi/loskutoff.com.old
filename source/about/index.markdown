@@ -7,6 +7,12 @@ sharing: false
 footer: true
 ---
 
+<section>
+  <img src="{{ root_url }}/images/viet.jpeg" style="width: 102px;">
+  <h1>About Igor Loskutoff</h1>
+  <p>Fullstack web developer and more!</p>
+</section>
+
 ## Skills
 * Ruby/Rails, Node.js, Scala Play framework
 * AngularJS

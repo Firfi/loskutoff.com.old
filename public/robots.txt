@@ -1,4 +1,4 @@
 User-agent: *
 Disallow: 
 
-Sitemap: http://loskutoff.com/sitemap.xml 
+Sitemap: http://Firfi.github.io/sitemap.xml 

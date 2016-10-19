@@ -2,10 +2,10 @@
 <feed xmlns="http://www.w3.org/2005/Atom">
 
   <title><![CDATA[Category: Games | firfiBlog]]></title>
-  <link href="http://loskutoff.com/blog/categories/games/atom.xml" rel="self"/>
-  <link href="http://loskutoff.com/"/>
-  <updated>2016-01-16T11:05:55+03:00</updated>
-  <id>http://loskutoff.com/</id>
+  <link href="http://Firfi.github.io/blog/categories/games/atom.xml" rel="self"/>
+  <link href="http://Firfi.github.io/"/>
+  <updated>2016-10-19T17:14:35+07:00</updated>
+  <id>http://Firfi.github.io/</id>
   <author>
     <name><![CDATA[Igor Loskutoff]]></name>
     <email><![CDATA[igor.loskutoff@gmail.com]]></email>
@@ -15,9 +15,9 @@
   
   <entry>
     <title type="html"><![CDATA[Writing a Bot for Online Browser Game With PhantomJS]]></title>
-    <link href="http://loskutoff.com/blog/writing-a-bot-for-online-browser-game-with-phantomjs/"/>
-    <updated>2014-03-28T12:18:18+04:00</updated>
-    <id>http://loskutoff.com/blog/writing-a-bot-for-online-browser-game-with-phantomjs</id>
+    <link href="http://Firfi.github.io/blog/writing-a-bot-for-online-browser-game-with-phantomjs/"/>
+    <updated>2014-03-28T15:18:18+07:00</updated>
+    <id>http://Firfi.github.io/blog/writing-a-bot-for-online-browser-game-with-phantomjs</id>
     <content type="html"><![CDATA[<p>Phantomjs could be used for frontend functional testing.</p>
 
 <p>Sometimes it could be used for <a href="http://www.yearofmoo.com/2012/11/angularjs-and-seo.html">rich web application html snapshots for search engine crawlers</a></p>

@@ -1,8 +1,8 @@
 <?xml version="1.0" encoding="utf-8"?>
 <feed xmlns="http://www.w3.org/2005/Atom">
 
-  <title><![CDATA[Category: Javascript, | firfiBlog]]></title>
-  <link href="http://Firfi.github.io/blog/categories/javascript/atom.xml" rel="self"/>
+  <title><![CDATA[Category: React | firfiBlog]]></title>
+  <link href="http://Firfi.github.io/blog/categories/react/atom.xml" rel="self"/>
   <link href="http://Firfi.github.io/"/>
   <updated>2016-10-19T17:14:35+07:00</updated>
   <id>http://Firfi.github.io/</id>

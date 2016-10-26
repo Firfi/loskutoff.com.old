@@ -6,6 +6,8 @@ comments: true
 categories: meteorjs, reactjs
 ---
 
+* Update * Nowadays Meteor provides React support OOB so this article would be useful if you're moving from old Blaze system.
+
 Here I'll share actual on this day way to use ReactJS with Meteor. The basic setup itself rather simple,
 so after shortly describing it, I'll touch a matters of using third-party React packages.
 

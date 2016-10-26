@@ -8,21 +8,21 @@
     </url>
     <url>
         <loc>http://Firfi.github.io/blog/isolated-blaze-components-in-meteorjs-application/</loc>
-        <lastmod>2016-10-19T17:06:34+07:00</lastmod>
+        <lastmod>2016-10-22T14:34:14+07:00</lastmod>
     </url>
     <url>
         <loc>http://Firfi.github.io/blog/meteorjs-born-to-be-legacy/</loc>
-        <lastmod>2016-10-19T17:06:34+07:00</lastmod>
+        <lastmod>2016-10-22T14:41:36+07:00</lastmod>
     </url>
     <url>
         <loc>http://Firfi.github.io/blog/using-reactjs-as-a-meteorjs-views/</loc>
-        <lastmod>2016-10-19T17:06:34+07:00</lastmod>
+        <lastmod>2016-10-22T14:41:36+07:00</lastmod>
     </url>
     <url>
         <loc>
             http://Firfi.github.io/blog/making-browserify-dot-js-working-with-meteor-application/
         </loc>
-        <lastmod>2016-10-19T17:06:34+07:00</lastmod>
+        <lastmod>2016-10-22T14:41:36+07:00</lastmod>
     </url>
     <url>
         <loc>
@@ -31,20 +31,26 @@
         <lastmod>2016-10-19T17:06:34+07:00</lastmod>
     </url>
     <url>
+        <loc>
+            http://Firfi.github.io/blog/react-native-simple-boxing-timer-from-scratch-to-app-store/
+        </loc>
+        <lastmod>2016-10-26T13:25:23+07:00</lastmod>
+    </url>
+    <url>
         <loc>http://Firfi.github.io/about/</loc>
-        <lastmod>2016-10-19T17:10:09+07:00</lastmod>
+        <lastmod>2016-10-19T17:16:16+07:00</lastmod>
     </url>
     <url>
         <loc>http://Firfi.github.io/blog/archives/</loc>
-        <lastmod>2016-10-19T17:09:02+07:00</lastmod>
+        <lastmod>2016-10-26T13:25:23+07:00</lastmod>
     </url>
     <url>
         <loc>http://Firfi.github.io/boxing-timer/</loc>
-        <lastmod>2016-10-19T17:14:35+07:00</lastmod>
+        <lastmod>2016-10-19T17:16:16+07:00</lastmod>
     </url>
     <url>
         <loc>http://Firfi.github.io/</loc>
-        <lastmod>2016-10-19T17:06:34+07:00</lastmod>
+        <lastmod>2016-10-26T13:25:23+07:00</lastmod>
     </url>
     <url>
         <loc>http://Firfi.github.io/robots.txt</loc>

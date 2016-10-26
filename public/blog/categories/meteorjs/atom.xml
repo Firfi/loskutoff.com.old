@@ -4,7 +4,7 @@
   <title><![CDATA[Category: Meteorjs | firfiBlog]]></title>
   <link href="http://Firfi.github.io/blog/categories/meteorjs/atom.xml" rel="self"/>
   <link href="http://Firfi.github.io/"/>
-  <updated>2016-10-19T17:14:35+07:00</updated>
+  <updated>2016-10-26T13:25:23+07:00</updated>
   <id>http://Firfi.github.io/</id>
   <author>
     <name><![CDATA[Igor Loskutoff]]></name>
@@ -18,7 +18,14 @@
     <link href="http://Firfi.github.io/blog/meteorjs-born-to-be-legacy/"/>
     <updated>2015-04-16T00:00:15+07:00</updated>
     <id>http://Firfi.github.io/blog/meteorjs-born-to-be-legacy</id>
-    <content type="html"><![CDATA[<p>Here I’ll share some thoughts about MeteorJS bad parts that I faced working with it.
+    <content type="html"><![CDATA[<ul>
+  <li>Update * Slowly things are getting better. Most of the issues noted in this article aren’t actual anymore. 
+Meteor community did a great job moving from Meteor packages to npm, from Blaze to React/Angular2/Vue, 
+from minimongo reactivity to <a href="http://www.apollostack.com/">Graphql</a>. I won’t say all those custom Meteor infrastructure things were failures, 
+as at the time it was the best choice to obtain quick traction and user base.  </li>
+</ul>
+
+<p>Here I’ll share some thoughts about MeteorJS bad parts that I faced working with it.
 It isn’t about starting holy war, but rather constructive criticism, and I really hope I’ll help Meteor community become better.</p>
 
 <p>I really want to be wrong here. Please point in comments if I’m wrong, and return me my trust in framework and in community.</p>

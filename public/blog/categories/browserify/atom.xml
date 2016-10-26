@@ -4,7 +4,7 @@
   <title><![CDATA[Category: Browserify | firfiBlog]]></title>
   <link href="http://Firfi.github.io/blog/categories/browserify/atom.xml" rel="self"/>
   <link href="http://Firfi.github.io/"/>
-  <updated>2016-10-19T17:14:35+07:00</updated>
+  <updated>2016-10-26T13:25:23+07:00</updated>
   <id>http://Firfi.github.io/</id>
   <author>
     <name><![CDATA[Igor Loskutoff]]></name>
@@ -18,7 +18,11 @@
     <link href="http://Firfi.github.io/blog/making-browserify-dot-js-working-with-meteor-application/"/>
     <updated>2015-06-16T21:33:52+07:00</updated>
     <id>http://Firfi.github.io/blog/making-browserify-dot-js-working-with-meteor-application</id>
-    <content type="html"><![CDATA[<p>In previous <a href="http://www.loskutoff.com/blog/using-reactjs-as-a-meteorjs-views/">post</a>
+    <content type="html"><![CDATA[<ul>
+  <li>Update * This article is completely outdated as Meteor supports npm packages out of the box now.</li>
+</ul>
+
+<p>In previous <a href="http://www.loskutoff.com/blog/using-reactjs-as-a-meteorjs-views/">post</a>
 I described how to wrap existing npm (especially React-related) packages into Meteor packages to use them in your application.</p>
 
 <p>This way was quite hacky and was involving manual build modification, as well as forking existing libraries and committing build distributions in those forks.</p>

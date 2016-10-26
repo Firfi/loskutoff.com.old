@@ -6,22 +6,26 @@ layout: default
   {% assign n = 0 %}
   {% for post in paginator.posts %}
   {% assign content = post.content %}
-    {% assign n = n + 1 %}
-    {% if n % 2 == 0 %}
-    <div class="grey">
+    {% if post.hidden %}
     {% else %}
-    <div class="white">
-    {% endif %}
-        <div class="container">
-            <div class="row">
-                <div class="col-lg-8 col-lg-offset-2">
-                    <article>
-                        {% include article.html %}
-                    </article>
+        {% assign n = n + 1 %}
+        {% if n % 2 == 0 %}
+        <div class="grey">
+        {% else %}
+        <div class="white">
+            {% endif %}
+            <div class="container">
+                <div class="row">
+                    <div class="col-lg-8 col-lg-offset-2">
+                        <article>
+                            {% include article.html %}
+                        </article>
+                    </div>
                 </div>
             </div>
         </div>
-    </div>
+    {% endif %}
+
   {% endfor %}
   <div class="pagination">
       <div class="container">

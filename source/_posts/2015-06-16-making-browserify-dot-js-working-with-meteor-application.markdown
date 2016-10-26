@@ -6,6 +6,8 @@ comments: true
 categories: meteorjs, reactjs, browserify
 ---
 
+* Update * This article is completely outdated as Meteor supports npm packages out of the box now.
+
 In previous [post](http://www.loskutoff.com/blog/using-reactjs-as-a-meteorjs-views/)
 I described how to wrap existing npm (especially React-related) packages into Meteor packages to use them in your application.
 

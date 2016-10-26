@@ -6,6 +6,11 @@ comments: true
 categories: meteorjs
 ---
 
+* Update * Slowly things are getting better. Most of the issues noted in this article aren't actual anymore. 
+Meteor community did a great job moving from Meteor packages to npm, from Blaze to React/Angular2/Vue, 
+from minimongo reactivity to [Graphql](http://www.apollostack.com/). I won't say all those custom Meteor infrastructure things were failures, 
+as at the time it was the best choice to obtain quick traction and user base.  
+
 Here I'll share some thoughts about MeteorJS bad parts that I faced working with it.
 It isn't about starting holy war, but rather constructive criticism, and I really hope I'll help Meteor community become better.
 

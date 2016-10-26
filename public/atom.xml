@@ -4,7 +4,7 @@
   <title><![CDATA[firfiBlog]]></title>
   <link href="http://Firfi.github.io/atom.xml" rel="self"/>
   <link href="http://Firfi.github.io/"/>
-  <updated>2016-10-19T17:14:35+07:00</updated>
+  <updated>2016-10-26T13:25:23+07:00</updated>
   <id>http://Firfi.github.io/</id>
   <author>
     <name><![CDATA[Igor Loskutoff]]></name>
@@ -12,6 +12,177 @@
   </author>
   <generator uri="http://octopress.org/">Octopress</generator>
 
+  
+  <entry>
+    <title type="html"><![CDATA[React Native Simple Boxing Timer - From Scratch to the App Store]]></title>
+    <link href="http://Firfi.github.io/blog/react-native-simple-boxing-timer-from-scratch-to-app-store/"/>
+    <updated>2016-10-22T14:44:35+07:00</updated>
+    <id>http://Firfi.github.io/blog/react-native-simple-boxing-timer-from-scratch-to-app-store</id>
+    <content type="html"><![CDATA[<p>Ever wondered how easy it is to create your first app for iOS? It isn’t. Many pitfalls out there. 
+I’ll describe the process as it was actual at 2016 October. </p>
+
+<!--more-->
+
+<h1 id="develop-with-react-native">Develop with React Native</h1>
+
+<p>It is quite easy to <a href="https://facebook.github.io/react-native/docs/getting-started.html">initialize React Native project</a> and start to tackle the code.
+With provided CLI it will run nicely and have a hot refresh on the emulator, along with browser debug console.
+Developing with React Native feels great in comparison with Phonegap I tried before 
+(<a href="https://play.google.com/store/apps/details?id=com.firfi.yobatimer">there is the link to the app I wrote as a result</a>)
+In comparison with web React.js, instead of DOM components you use native components like <view /> and write a lot of inline styles. 
+Otherwise, it’s a familiar React JS app where you can use your favorite libraries like Bluebird, Moment.js, etc.
+Of course, Redux/Mobx too. One exception - no libraries which are working with DOM. Because there’s no DOM.
+I’ve chosen Mobx for data handling and I think it was a very good solution for concrete application objectives.
+It worked quite nice with settings screen. That’s a topic that I’ll write a different post about.</p>
+
+<p><img src="http://Firfi.github.io/images/boxing-timer/settings.png" alt="Settings screen" title="Boxing timer application settings screen" /></p>
+
+<p>React Native components which were used for this screen - View, Picker and Settings class.</p>
+
+<h2 id="version-for-old-ios">Version for old iOS</h2>
+
+<p>I wanted the app to be accessible as much as possible, including to third-world countries. 
+By this reason, I included iOS 7 support to the app (iPhone 4s and later). It brings additional considerations: 
+React Native version 0.33.1 was the last version where iOS 7 was officially supported. 
+Gladly it wasn’t too old (it was released just a month ago) so I’ve decided to go with it.
+Of course, I’ve tried earlier versions initially, but they weren’t building well in xCode. </p>
+
+<h2 id="design-material-ui">Design, Material UI</h2>
+
+<p>All apps need a design. When you’re a web developer without a visual design feeling, you just take a Bootstrap.
+There’s no Bootstrap in mobile apps world so I’ve turned to Google Material Design rulebook. 
+First, I’ve decided with the color scheme. It had to be roughly the same I used for my previous timer app, so I’ve got 
+an appropriate color combination from Material Design color guide. </p>
+
+<h2 id="icons-buttons">Icons, buttons</h2>
+
+<p>Second, I needed some buttons. 
+Library <a href="https://github.com/xinthink/react-native-material-kit">React Native Material Kit</a> did the job.
+Third, I’ve needed some icons. For the web, you just get fontawesome. 
+Good news - they’re available on <a href="https://github.com/oblador/react-native-vector-icons">React Native too</a></p>
+
+<p><img src="http://Firfi.github.io/images/boxing-timer/main.png" alt="Main screen" title="Boxing timer application main screen" /></p>
+
+<p>So now I had a design for my main screen.</p>
+
+<h2 id="sleep-control-sounds">Sleep control, sounds</h2>
+
+<p>Specifics of a timer application is that you need to play sounds and have a control over screen sleeping. 
+For sounds, I’ve used <a href="https://github.com/zmxv/react-native-sound">React Native Sound</a> library. 
+It was quite old at the moment, but I haven’t found anything better. It did its job though and let me play the sounds.</p>
+
+<div class="jumbotron">
+    <p>Note that in order for some React Native libraries to work, you have to do additional settings in your iOS and Android projects.</p>
+    <p>What is need to be done described in each library readme, but mostly running script `react-native link library-name` does the job automatically.</p>
+    <p>This is actual for Material Kit, Icons lib, React Native Sound and screen sleep control lib.</p>
+</div>
+
+<p>For screen sleep control I used <a href="https://github.com/corbt/react-native-keep-awake">react-native-keep-awake</a>. I do <code>KeepAwake.activate()</code> whenever timer is running and <code>KeepAwake.deactivate()</code> whenever timer is stopped.
+This way, the user wouldn’t experience screen sleep in the middle of training.</p>
+
+<h2 id="rotation-control-responsive-font-size">Rotation control, responsive font size</h2>
+
+<p>The hard part was the reactive font size change, depending on screen rotation. 
+Also, you can’t use the pixels there unless you define the sizes for each Apple device.
+Googling for screen rotation detection gave me a couple of deprecated and non-working libraries, 
+and the official React Native docs were quite vague on this matter. Eventually, in depths of Stack Overflow I found The Answer and now I sharing this Secret with you:
+use View’s onLayout callback!</p>
+
+<div class="bogus-wrapper"><notextile><figure class="code"><div class="highlight"><table><tr><td class="gutter"><pre class="line-numbers"><span class="line-number">1</span>
+<span class="line-number">2</span>
+<span class="line-number">3</span>
+<span class="line-number">4</span>
+</pre></td><td class="code"><pre><code class=""><span class="line">&lt;View onLayout={(event) =&gt; {
+</span><span class="line">    this.setState(this.calculateWH(event));
+</span><span class="line">}}&gt;
+</span><span class="line">...</span></code></pre></td></tr></table></div></figure></notextile></div>
+
+<p>where calculateWH is defined this way:</p>
+
+<div class="bogus-wrapper"><notextile><figure class="code"><div class="highlight"><table><tr><td class="gutter"><pre class="line-numbers"><span class="line-number">1</span>
+<span class="line-number">2</span>
+<span class="line-number">3</span>
+<span class="line-number">4</span>
+<span class="line-number">5</span>
+<span class="line-number">6</span>
+<span class="line-number">7</span>
+</pre></td><td class="code"><pre><code class=""><span class="line">calculateWH(event) {
+</span><span class="line">    const l = event ? event.nativeEvent.layout : Dimensions.get('window'); // for some reason, it doesn't always give the event
+</span><span class="line">    return {
+</span><span class="line">        vw: l.width / 100,
+</span><span class="line">        vh: l.height / 100
+</span><span class="line">    };
+</span><span class="line">}</span></code></pre></td></tr></table></div></figure></notextile></div>
+
+<p>so now you have vw and vh for reactively changing your fonts size and also have rerendered on screen rotation. 
+Don’t forget to import Dimensions from ‘react-native’ package.</p>
+
+<h1 id="app-store">App store</h1>
+
+<p>I found this part most time-consuming, in comparison with development itself.</p>
+
+<h2 id="app-icons">App icons</h2>
+
+<p>First, you need a nice icon. 
+I just fetched a couple of free ones from the Internet, glued it together in Photoshop and added a gradient background. 
+Another thing you’d need is a lot of different sizes for the icon. 
+I just uploaded my icon to one of free icon resizing services and got it in different sizes.</p>
+
+<p><img src="http://Firfi.github.io/images/boxing-timer/icon.png" alt="App Icon" title="App Icon" /></p>
+
+<h2 id="app-screenshots-ux-testing">App screenshots, UX testing</h2>
+
+<p>Second, in order for your app published, you need screenshots. 
+Usually, a couple is enough, but I wanted screenshots for all devices. 
+As a result, with two app screens, I needed around 12 screenshots on 6 emulators. 
+People who add internationalization in their app needs screenshot packs for each language. 
+So if I will be supporting let’s say 12 languages I’d need 144 screenshots. 
+Better to prepare for that and automatize the process.
+For this and for beta testing / deployment I used <a href="https://github.com/fastlane/fastlane">fastlane</a>.
+Fastlane is a set of tools for automating several mobile development chores. 
+It spared me a couple of clicks. Well, actually a lot of clicks.
+I used it’s <code>snapshot</code> tool for taking screenshots. Before really using it, I needed to set up the tests in xCode. 
+I did everything by the manual but there was an issue: elements didn’t recognize testId property. 
+So I’ve decided not to go with it, and record test with manual recording feature in xCode.</p>
+
+<p>Resulting test I’ve got:</p>
+
+<div class="bogus-wrapper"><notextile><figure class="code"><div class="highlight"><table><tr><td class="gutter"><pre class="line-numbers"><span class="line-number">1</span>
+<span class="line-number">2</span>
+<span class="line-number">3</span>
+<span class="line-number">4</span>
+<span class="line-number">5</span>
+<span class="line-number">6</span>
+<span class="line-number">7</span>
+<span class="line-number">8</span>
+<span class="line-number">9</span>
+<span class="line-number">10</span>
+<span class="line-number">11</span>
+<span class="line-number">12</span>
+</pre></td><td class="code"><pre><code class=""><span class="line">func testExample() {
+</span><span class="line">      
+</span><span class="line">      let app = XCUIApplication()
+</span><span class="line">      snapshot("0Timer")
+</span><span class="line">      let startButton = app.buttons[" Start  "]
+</span><span class="line">      startButton.tap()
+</span><span class="line">      let stopButton = app.buttons[" Stop  "]
+</span><span class="line">      stopButton.tap()
+</span><span class="line">      app.tabBars.buttons["Settings"].tap()
+</span><span class="line">      snapshot("1Settings")
+</span><span class="line">      
+</span><span class="line">}</span></code></pre></td></tr></table></div></figure></notextile></div>
+
+<p>After running it in snapshot tool, I’ve got nice 12 screenshots. Now I can use it for internationalization too.</p>
+
+<h2 id="beta-signing-release">Beta, signing, release</h2>
+
+<p>It was the time to check the app in a real environment. 
+By default, fastlane is set up for TestFlight, 
+but TestFlight doesn’t work on old iOS that I had at the time, so I’ve reconfigured it to TestFairy service.
+After checking on the device, I’ve released it with fastlane deploy. This process has its moments (i.e. signing) 
+but generally, fastlane automatize most of the chores.</p>
+]]></content>
+  </entry>
   
   <entry>
     <title type="html"><![CDATA[Moving MeteorJS From Blaze to React Frontend Infrastructure]]></title>
@@ -73,7 +244,11 @@ It <em>makes</em> you keep your master data in one place, handling to components
     <link href="http://Firfi.github.io/blog/making-browserify-dot-js-working-with-meteor-application/"/>
     <updated>2015-06-16T21:33:52+07:00</updated>
     <id>http://Firfi.github.io/blog/making-browserify-dot-js-working-with-meteor-application</id>
-    <content type="html"><![CDATA[<p>In previous <a href="http://www.loskutoff.com/blog/using-reactjs-as-a-meteorjs-views/">post</a>
+    <content type="html"><![CDATA[<ul>
+  <li>Update * This article is completely outdated as Meteor supports npm packages out of the box now.</li>
+</ul>
+
+<p>In previous <a href="http://www.loskutoff.com/blog/using-reactjs-as-a-meteorjs-views/">post</a>
 I described how to wrap existing npm (especially React-related) packages into Meteor packages to use them in your application.</p>
 
 <p>This way was quite hacky and was involving manual build modification, as well as forking existing libraries and committing build distributions in those forks.</p>
@@ -157,7 +332,11 @@ as I had to do with <code>reactjs:react</code>, <code>firfi:griddle-react</code>
     <link href="http://Firfi.github.io/blog/using-reactjs-as-a-meteorjs-views/"/>
     <updated>2015-04-17T19:55:17+07:00</updated>
     <id>http://Firfi.github.io/blog/using-reactjs-as-a-meteorjs-views</id>
-    <content type="html"><![CDATA[<p>Here I’ll share actual on this day way to use ReactJS with Meteor. The basic setup itself rather simple,
+    <content type="html"><![CDATA[<ul>
+  <li>Update * Nowadays Meteor provides React support OOB so this article would be useful if you’re moving from old Blaze system.</li>
+</ul>
+
+<p>Here I’ll share actual on this day way to use ReactJS with Meteor. The basic setup itself rather simple,
 so after shortly describing it, I’ll touch a matters of using third-party React packages.</p>
 
 <!--more-->
@@ -326,7 +505,14 @@ pull updates and generally have things tracked better.</p>
     <link href="http://Firfi.github.io/blog/meteorjs-born-to-be-legacy/"/>
     <updated>2015-04-16T00:00:15+07:00</updated>
     <id>http://Firfi.github.io/blog/meteorjs-born-to-be-legacy</id>
-    <content type="html"><![CDATA[<p>Here I’ll share some thoughts about MeteorJS bad parts that I faced working with it.
+    <content type="html"><![CDATA[<ul>
+  <li>Update * Slowly things are getting better. Most of the issues noted in this article aren’t actual anymore. 
+Meteor community did a great job moving from Meteor packages to npm, from Blaze to React/Angular2/Vue, 
+from minimongo reactivity to <a href="http://www.apollostack.com/">Graphql</a>. I won’t say all those custom Meteor infrastructure things were failures, 
+as at the time it was the best choice to obtain quick traction and user base.  </li>
+</ul>
+
+<p>Here I’ll share some thoughts about MeteorJS bad parts that I faced working with it.
 It isn’t about starting holy war, but rather constructive criticism, and I really hope I’ll help Meteor community become better.</p>
 
 <p>I really want to be wrong here. Please point in comments if I’m wrong, and return me my trust in framework and in community.</p>

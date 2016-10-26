@@ -4,7 +4,7 @@
   <title><![CDATA[Category: Blaze, | firfiBlog]]></title>
   <link href="http://Firfi.github.io/blog/categories/blaze/atom.xml" rel="self"/>
   <link href="http://Firfi.github.io/"/>
-  <updated>2016-10-26T13:25:23+07:00</updated>
+  <updated>2016-10-26T13:35:19+07:00</updated>
   <id>http://Firfi.github.io/</id>
   <author>
     <name><![CDATA[Igor Loskutoff]]></name>
@@ -12,61 +12,6 @@
   </author>
   <generator uri="http://octopress.org/">Octopress</generator>
 
-  
-  <entry>
-    <title type="html"><![CDATA[Moving MeteorJS From Blaze to React Frontend Infrastructure]]></title>
-    <link href="http://Firfi.github.io/blog/moving-meteorjs-from-blaze-to-react-frontend-infrastructure/"/>
-    <updated>2016-01-14T01:53:19+07:00</updated>
-    <id>http://Firfi.github.io/blog/moving-meteorjs-from-blaze-to-react-frontend-infrastructure</id>
-    <content type="html"><![CDATA[<p>Making rich frontend SPA is always challenging task, especially when you don’t know what right tools to choose.</p>
-
-<p>In this post I’ll propose one of the best at the moment tools and a way to integrate it with MeteorJS infrastructure.</p>
-
-<p>One big project which I’m working on currently is <a href="https://fiddlequest.com/">Fiddlequest</a>, tool for musical students, their parents and teachers.</p>
-
-<p>It have lot of dynamic frontend components with complicated requirements. They should be fast, reactive and real-time.</p>
-
-<p>It was a real challenge to write this project on Blaze, when I didn’t know how to integrate React there.</p>
-
-<p>When I found a good way, it was already full of Blaze templates which was not easy to maintain.</p>
-
-<p>Simply rewriting wasn’t an option as it’d lead to stopping developing new features, so I found it very handy to rewrite it component by component from time to time, not stopping introducing new features.</p>
-
-<p>My objective here is to show reader why and how to move Meteor project from Blaze to React.</p>
-
-<!--more-->
-
-<h2 id="why-should-i-do-it">Why should I do it</h2>
-
-<h3 id="blaze-is-deprecated">1. Blaze is deprecated</h3>
-
-<p>Main reason is simple: Meteor Development Group announced <a href="https://forums.meteor.com/t/next-steps-on-blaze-and-the-view-layer/13561">abandonment of Blaze</a>.</p>
-
-<p>As a side note, it isn’t the first time MDG changing template engine: before Blaze was <a href="http://info.meteor.com/blog/meteor-080-introducing-blaze">Spark</a>.</p>
-
-<p>However, I’m pretty sure that this time new template engine knowledge will be really useful for you as React don’t going anywhere for long time from now
-(on contrary to Angular which in it’s place being substituted by completely new and different <a href="https://angular.io/">Angular 2</a>, keeping only a name).</p>
-
-<h3 id="react-is-really-better-for-you">2. React is really better for you</h3>
-
-<ul>
-  <li>
-    <p>It working with state right way. You don’t have piece of data lingering copied over in several different components.
-It <em>makes</em> you keep your master data in one place, handling to components only projection of this data. See <a href="https://facebook.github.io/react/docs/thinking-in-react.html">official React docs</a></p>
-  </li>
-  <li>
-    <p>It have nice component system, making you write independent components which are really easy (I did it many times and happy so far) to move around your application UI should requirements change.</p>
-  </li>
-</ul>
-
-<p>I.e. I have multi step signup flow with client+server-side validations. One day, I got a requirement from client to have it working not only on the /signin page, but also on landing page through modal dialog. It was as easy as just writing &lt;SignFlow … /&gt; inside my modal component body!</p>
-
-<ul>
-  <li>It have strong community support, meaning there’s lots of good quality components which you can just plug in in your application and use. On contrary, Blaze components are rare and have poor code quality overall, crawling with bugs. Good riddance!</li>
-</ul>
-
-]]></content>
-  </entry>
   
   <entry>
     <title type="html"><![CDATA[Isolated Blaze Components in MeteorJS Application]]></title>

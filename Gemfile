@@ -6,7 +6,7 @@ group :development do
   gem 'rake', '~> 12.3.3'
   gem 'jekyll', '~> 0.12'
   gem 'rdiscount', '~> 2.0.7'
-  gem 'RedCloth', '~> 4.2.9'
+  gem 'RedCloth', '~> 4.3.0'
   gem 'kramdown'
   gem 'coderay'
   gem 'haml', '~> 3.1.7'
